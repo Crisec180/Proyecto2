@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
+
 from core.data_manager import DataManager
 from ui.dashboard_view import DashboardView
 from ui.empleados_view import EmpleadosView
