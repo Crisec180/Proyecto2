@@ -1,6 +1,11 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import csv
+from Busqueda_binaria import binary_search
+from Ordenamiento import merge_sort, merge
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -199,44 +204,76 @@ class PayrollSystem(ctk.CTk):
         content_frame = ctk.CTkFrame(self.main_frame, fg_color="#1a1a1a")
         content_frame.grid(row=1, column=0, sticky="nsew")
         content_frame.grid_columnconfigure(0, weight=1)
-        content_frame.grid_rowconfigure(1, weight=1)
+        content_frame.grid_rowconfigure(2, weight=1)
         
-        # Barra de búsqueda
+        # Barra de búsqueda y filtros
         search_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
         search_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=20)
+        search_frame.grid_columnconfigure(1, weight=1)
         
         search_entry = ctk.CTkEntry(
             search_frame,
-            placeholder_text="🔍 Buscar empleado...",
-            height=40,
-            width=400
+            placeholder_text="🔍 Buscar empleado (Nombre/Apellido/ID)...",
+            height=40
         )
-        search_entry.pack(side="left", padx=(0, 10))
+        search_entry.grid(row=0, column=1, padx=(0, 10), sticky="ew")
         
-        add_btn = ctk.CTkButton(
-            search_frame,
-            text="+ Agregar Empleado",
-            height=40,
-            fg_color="#2fa572",
-            hover_color="#25824f"
-        )
-        add_btn.pack(side="left")
+        # Frame de botones de ordenamiento
+        sort_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
+        sort_frame.grid(row=1, column=0, sticky="ew", padx=20, pady=(0, 20))
+        sort_frame.grid_columnconfigure(4, weight=1)
+        
+        ctk.CTkLabel(sort_frame, text="Ordenar por:", font=ctk.CTkFont(weight="bold")).grid(row=0, column=0, padx=(0, 10))
+        
+        sort_buttons = [
+            ("Nombre", lambda: self.ordenar_empleados(search_entry, 'nombre')),
+            ("Apellido", lambda: self.ordenar_empleados(search_entry, 'apellido')),
+            ("ID", lambda: self.ordenar_empleados(search_entry, 'id'))
+        ]
+        
+        for i, (text, command) in enumerate(sort_buttons):
+            ctk.CTkButton(
+                sort_frame,
+                text=text,
+                command=command,
+                width=100,
+                fg_color="#2fa572",
+                hover_color="#25824f",
+                font=ctk.CTkFont(size=12)
+            ).grid(row=0, column=i+1, padx=5)
+        
+        # Botón de búsqueda binaria
+        ctk.CTkButton(
+            sort_frame,
+            text="🔍 Buscar (Binary Search)",
+            command=lambda: self.buscar_binario(search_entry),
+            width=150,
+            fg_color="#3b8ed0",
+            hover_color="#2d6fa3",
+            font=ctk.CTkFont(size=12)
+        ).grid(row=0, column=4, padx=5, sticky="e")
         
         # Tabla de empleados
         table_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
-        table_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=(0, 20))
+        table_frame.grid(row=2, column=0, sticky="nsew", padx=20, pady=(0, 20))
+        table_frame.grid_rowconfigure(0, weight=1)
+        table_frame.grid_columnconfigure(0, weight=1)
         
         # ScrollableFrame para la tabla
         scrollable = ctk.CTkScrollableFrame(table_frame, fg_color="#2b2b2b")
-        scrollable.pack(fill="both", expand=True)
+        scrollable.grid(row=0, column=0, sticky="nsew")
+        scrollable.grid_columnconfigure(0, weight=1)
         
-        if self.empleados:
+        # Usar empleados ordenados si existen, sino usar los originales
+        empleados_mostrar = self.empleados_ordenados if self.empleados_ordenados else self.empleados
+        
+        if empleados_mostrar:
             # Encabezados
-            headers = list(self.empleados[0].keys())
+            headers = list(empleados_mostrar[0].keys())
             for i, header in enumerate(headers):
                 label = ctk.CTkLabel(
                     scrollable,
-                    text=header,
+                    text=header.upper(),
                     font=ctk.CTkFont(weight="bold"),
                     fg_color="#1a1a1a",
                     corner_radius=5
@@ -244,7 +281,7 @@ class PayrollSystem(ctk.CTk):
                 label.grid(row=0, column=i, padx=5, pady=5, sticky="ew")
             
             # Datos
-            for row_idx, empleado in enumerate(self.empleados, 1):
+            for row_idx, empleado in enumerate(empleados_mostrar, 1):
                 for col_idx, value in enumerate(empleado.values()):
                     label = ctk.CTkLabel(
                         scrollable,
@@ -259,6 +296,43 @@ class PayrollSystem(ctk.CTk):
                 text_color="gray"
             )
             no_data.pack(pady=50)
+    
+    def ordenar_empleados(self, search_entry, campo):
+        if not self.empleados:
+            messagebox.showwarning("Advertencia", "No hay empleados cargados")
+            return
+        
+        # Usar merge_sort con función key para ordenar por el campo especificado
+        self.empleados_ordenados = merge_sort(self.empleados, key=lambda emp: emp[campo])
+        
+        messagebox.showinfo("Éxito", f"Empleados ordenados por {campo}")
+        self.show_empleados()
+    
+    def buscar_binario(self, search_entry):
+     valor_busqueda = search_entry.get().strip().lower()
+    
+     if not valor_busqueda:
+        messagebox.showwarning("Advertencia", "Ingresa un valor para buscar")
+        return
+    
+     if not self.empleados_ordenados:
+        messagebox.showwarning("Advertencia", "Primero ordena los empleados")
+        return
+    
+     # Crear lista de nombres en minúsculas para la búsqueda
+     nombres = [emp['nombre'].lower() for emp in self.empleados_ordenados]
+    
+     # Usar binary search
+     indice = binary_search(nombres, valor_busqueda)
+    
+     if indice != -1:
+         empleado = self.empleados_ordenados[indice]
+         resultado = f"Empleado encontrado:\n\n"
+         for key, value in empleado.items():
+             resultado += f"{key.upper()}: {value}\n"
+         messagebox.showinfo("Resultado de Búsqueda", resultado)
+     else:
+         messagebox.showinfo("Resultado", f"No se encontró empleado con nombre: {valor_busqueda}")
     
     def show_cola_neto(self):
         self.clear_main_frame()
