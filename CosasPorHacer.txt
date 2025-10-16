@@ -82,3 +82,6 @@ procesos:
     2. “Obtener Neto por Horas”
     3. “Calcular Neto por Contrado”
     4. Y gráficamente mostrar la impresión de los datos del cheque.
+
+Archivos, guardar y cargar:
+    Crear una clase Archivos que trabajen de manera genérica para tener un guardar y cargar siempre y se puedan utilizar al final de cada proceso
