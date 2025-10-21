@@ -1,4 +1,4 @@
-#Para empleaados
+#Para empleados
 #Y registros en el csv
 class HorasExtras:
     def __init__(self, horas_extra, valor_hora):
