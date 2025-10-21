@@ -4,16 +4,5 @@ class Empresa:
         self.nombre = nombre
         self.empleados = []
 
-    def agregar_empleado(self, empleado):
-        self.empleados.append(empleado)
-
-    def obtener_empleados(self):
-        return self.empleados
-    
-    def Horas_trabajadas_por_empleado(self, empleado_id):
-        for emp in self.empleados:
-            if emp.id == empleado_id:
-                return emp.calcular_horas_trabajadas()
-        return 0
-    
-    
+    def guardar_registros_CSV(self, archivo):
+        print("guardar")
