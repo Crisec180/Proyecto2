@@ -1,4 +1,5 @@
 #La clase que recibe todo los datos de chequeo y empleados
+from CalculoConCOLAS import CalculaNetoEmpleado
 class Empresa:
     def __init__(self, nombre):
         self.nombre = nombre

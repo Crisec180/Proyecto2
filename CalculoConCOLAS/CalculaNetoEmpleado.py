@@ -10,7 +10,7 @@ class CalculaNetoEmpleado:
         self.horas_extras = horas_extras
         self.otras_deducciones = otras_deducciones
 
-    #COLA PARA GUARDAR LOS RESULTADOS
+#COLA PARA GUARDAR LOS RESULTADOS--------------------------------------------------------
     def __init__(self):
         self.cola=deque()
 
@@ -21,7 +21,14 @@ class CalculaNetoEmpleado:
         if not self.esta_vacia():
             return self.cola.popleft()
         return None
+    
+    def esta_vacia(self):
+        cant = 0
+        for _ in self.cola:
+            cant += 1
+        return cant == 0
 
+#-----------------------------------------------------------------------------------------
     def calcular_neto(self):
         salario_base = self.empleado.salario_base
         deducciones = self.empleado.deducciones

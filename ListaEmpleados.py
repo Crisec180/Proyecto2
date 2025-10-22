@@ -18,11 +18,8 @@ class ListaEmpleados:
     
     def guardar_en_CSV(self, nombre_archivo):
         try:
-            # 1. CORRECCIÓN: Usar 'w' (escritura) y encoding='utf-8' para acentos
             with open(nombre_archivo, 'w', newline='', encoding='utf-8') as archivo:
                 escritor_csv = csv.writer(archivo)
-                
-                # 2. CORRECCIÓN: Escribir la fila de encabezado primero
                 escritor_csv.writerow(['id', 'nombre', 'apellido', 'edad', 'telefono', 'correo'])
                 
                 # 3. Escribir los datos de los empleados
@@ -36,7 +33,8 @@ class ListaEmpleados:
             print(f"Empleados guardados exitosamente en {nombre_archivo}.")
         except Exception as e:
             print(f"Error al guardar en CSV: {e}")
-    
+
+    #ya funcionan los dos
     def cargar_empleados_desde_CSV(self, nombre_archivo):
         try:
             self.empleados = []         #(utf-8) es para leer tíldes
