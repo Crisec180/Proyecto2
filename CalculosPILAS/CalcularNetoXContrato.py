@@ -3,9 +3,14 @@ from CalculosConDICCIONARIOS import CalcularDeduccionNormal
 from CalculosConDICCIONARIOS import CalculaOtrasDeducciones
 
 class CalcularNetoXContrato:
-    def __init__(self, bruto, deducciones):
-        self.bruto = bruto
+    def __init__(self, empleado,deducciones):
+        self.empleado = empleado
         self.deducciones = deducciones
 
     def calcular_neto(self):
-        return self.bruto - self.deducciones
+       bruto = self.empleado.salario_bruto()
+       CalcularDeduccionNormal = CalcularDeduccionNormal.CalculoDeDeducciones(bruto)
+       deduccion_normal = CalcularDeduccionNormal.calcular_deducciones()
+       CalcularOtrasDeducciones = CalculaOtrasDeducciones.CalculoDeOtrasDeducciones(bruto)
+       otras_deducciones = CalcularOtrasDeducciones.calcular_otras_deducciones()
+       return bruto - deduccion_normal - otras_deducciones
