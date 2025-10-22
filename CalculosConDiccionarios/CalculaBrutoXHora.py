@@ -22,4 +22,4 @@ class CalculoDeSalarioBruto:
             "horas_trabajadas": self.horas_trabajadas,
             "valor_hora": self.valor_hora,
             "salario_bruto": bruto
-        }    
+        }

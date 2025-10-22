@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox
+from ListaEmpleados import ListaEmpleados
 
 class EmpleadosView:
     """Vista para la gestión de empleados con Merge Sort y Binary Search"""
@@ -117,6 +118,7 @@ class EmpleadosView:
                         fg_color="#2b2b2b" if row_idx % 2 == 0 else "#1a1a1a"
                     )
                     label.grid(row=row_idx, column=col_idx, padx=5, pady=5, sticky="ew")
+
         else:
             no_data = ctk.CTkLabel(
                 scrollable,

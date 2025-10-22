@@ -7,3 +7,6 @@ class Empresa:
 
     def guardar_registros_CSV(self, archivo):
         print("guardar")
+
+    def mostrarempledos_conhecor(self):
+        print("mostrar empleados con hecor")
