@@ -1,6 +1,8 @@
 #Donde se calculan 
 from HorasExtras import HorasExtras
 
+#esto se puede pasar a empresa.py 
+
 class Cheques:
     #info del empleado
     def __init__(self, nombre, apellido, horas, valor_hora, salario_bruto, horas_extra):

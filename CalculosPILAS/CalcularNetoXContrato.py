@@ -1,3 +1,4 @@
+# CalculosPilas/CalcularNetoXContrato.py
 class CalcularNetoXContrato:
     def __init__(self, bruto, deducciones):
         self.bruto = bruto

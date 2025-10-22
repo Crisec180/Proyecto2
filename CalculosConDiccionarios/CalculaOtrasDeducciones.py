@@ -4,3 +4,4 @@ class CalculoDeOtrasDeducciones:
 
     def calcular_deducciones(self):
         return self.bruto * 0.05
+    
