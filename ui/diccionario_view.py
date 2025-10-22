@@ -1,11 +1,13 @@
 import customtkinter as ctk
+from tkinter import messagebox
 
 class DiccionarioView:
     """Vista para la gestión de Diccionario"""
     
-    def __init__(self, parent, diccionario):
+    def __init__(self, parent, diccionario, data_manager):
         self.parent = parent
         self.diccionario = diccionario
+        self.data_manager = data_manager
     
     def render(self):
         self.create_header()
@@ -27,6 +29,17 @@ class DiccionarioView:
         
         subtitle = ctk.CTkLabel(header_frame, text="Gestión de cálculos con estructura de diccionario", font=ctk.CTkFont(size=14), text_color="gray")
         subtitle.pack(anchor="w")
+        
+        # Mostrar empleado seleccionado
+        empleado = self.data_manager.obtener_empleado_seleccionado()
+        if empleado:
+            info = ctk.CTkLabel(
+                header_frame,
+                text=f"✓ Trabajando con: {empleado.get('nombre', '')} {empleado.get('apellido', '')} (ID: {empleado.get('id', '')})",
+                font=ctk.CTkFont(size=12, weight="bold"),
+                text_color="#dc2626"
+            )
+            info.pack(anchor="w", pady=(5, 0))
     
     def create_left_panel(self, parent):
         left_panel = ctk.CTkFrame(parent, fg_color="#1a1a1a")
@@ -34,12 +47,27 @@ class DiccionarioView:
         
         ctk.CTkLabel(left_panel, text="Agregar al Diccionario", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=20)
         
-        ctk.CTkLabel(left_panel, text="Clave (ID):").pack(pady=(10, 5), padx=20, anchor="w")
-        key_entry = ctk.CTkEntry(left_panel, placeholder_text="Ej: EMP001")
-        key_entry.pack(pady=(0, 10), padx=20, fill="x")
+        # Selector de empleado como clave
+        ctk.CTkLabel(left_panel, text="Empleado (Clave):", font=ctk.CTkFont(size=12, weight="bold")).pack(pady=(10, 5), padx=20, anchor="w")
+        
+        empleados = self.data_manager.obtener_empleados()
+        if empleados:
+            opciones_empleados = [f"{emp.get('id', '')} - {emp.get('nombre', '')} {emp.get('apellido', '')}" for emp in empleados]
+            key_menu = ctk.CTkOptionMenu(left_panel, values=opciones_empleados)
+            key_menu.pack(pady=(0, 10), padx=20, fill="x")
+            
+            # Pre-seleccionar si hay un empleado seleccionado
+            empleado_actual = self.data_manager.obtener_empleado_seleccionado()
+            if empleado_actual:
+                texto_actual = f"{empleado_actual.get('id', '')} - {empleado_actual.get('nombre', '')} {empleado_actual.get('apellido', '')}"
+                if texto_actual in opciones_empleados:
+                    key_menu.set(texto_actual)
+        else:
+            key_menu = ctk.CTkOptionMenu(left_panel, values=["No hay empleados"])
+            key_menu.pack(pady=(0, 10), padx=20, fill="x")
         
         ctk.CTkLabel(left_panel, text="Tipo de Cálculo:").pack(pady=(10, 5), padx=20, anchor="w")
-        tipo_menu = ctk.CTkOptionMenu(left_panel, values=["Bruto por Horas", "Deducciones Normales", "Otras Deducciones"])
+        tipo_menu = ctk.CTkOptionMenu(left_panel, values=["Bruto por Horas", "Deducciones Normales", "Otras Deducciones", "Bonificaciones", "Impuestos"])
         tipo_menu.pack(pady=(0, 10), padx=20, fill="x")
         
         ctk.CTkLabel(left_panel, text="Valor:").pack(pady=(10, 5), padx=20, anchor="w")
@@ -47,26 +75,50 @@ class DiccionarioView:
         value_entry.pack(pady=(0, 10), padx=20, fill="x")
         
         def add():
-            key = key_entry.get()
+            if not empleados:
+                messagebox.showwarning("Advertencia", "No hay empleados cargados. Carga un archivo CSV primero.")
+                return
+            
+            seleccion = key_menu.get()
             tipo = tipo_menu.get()
             value = value_entry.get()
-            if key and value:
-                if key not in self.diccionario:
-                    self.diccionario[key] = {}
-                self.diccionario[key][tipo] = value
-                self.update_dict_display()
-                key_entry.delete(0, 'end')
-                value_entry.delete(0, 'end')
+            
+            if seleccion and value and "No hay empleados" not in seleccion:
+                try:
+                    float(value)  # Validar que sea número
+                    # Usar el ID como clave
+                    key = seleccion.split(" - ")[0]
+                    
+                    if key not in self.diccionario:
+                        self.diccionario[key] = {}
+                    self.diccionario[key][tipo] = value
+                    self.update_dict_display()
+                    value_entry.delete(0, 'end')
+                    messagebox.showinfo("Éxito", f"Cálculo agregado al diccionario para {key}")
+                except ValueError:
+                    messagebox.showerror("Error", "El valor debe ser un número válido")
+            else:
+                messagebox.showwarning("Advertencia", "Completa todos los campos")
         
         def remove():
-            key = key_entry.get()
-            if key in self.diccionario:
-                del self.diccionario[key]
-                self.update_dict_display()
-                key_entry.delete(0, 'end')
+            if not empleados:
+                messagebox.showwarning("Advertencia", "No hay empleados cargados.")
+                return
+            
+            seleccion = key_menu.get()
+            if seleccion and "No hay empleados" not in seleccion:
+                key = seleccion.split(" - ")[0]
+                if key in self.diccionario:
+                    respuesta = messagebox.askyesno("Confirmar", f"¿Eliminar todos los cálculos de {key}?")
+                    if respuesta:
+                        del self.diccionario[key]
+                        self.update_dict_display()
+                        messagebox.showinfo("Éxito", f"Cálculos eliminados para {key}")
+                else:
+                    messagebox.showinfo("No Encontrado", f"No hay cálculos para {key}")
         
         ctk.CTkButton(left_panel, text="➕ Agregar/Actualizar", command=add, fg_color="#dc2626", hover_color="#b91c1c").pack(pady=10, padx=20, fill="x")
-        ctk.CTkButton(left_panel, text="🗑️ Eliminar Clave", command=remove, fg_color="#6b7280", hover_color="#4b5563").pack(pady=10, padx=20, fill="x")
+        ctk.CTkButton(left_panel, text="🗑️ Eliminar Empleado", command=remove, fg_color="#6b7280", hover_color="#4b5563").pack(pady=10, padx=20, fill="x")
     
     def create_right_panel(self, parent):
         right_panel = ctk.CTkFrame(parent, fg_color="#1a1a1a")
@@ -84,72 +136,33 @@ class DiccionarioView:
             widget.destroy()
         
         if not self.diccionario:
-            ctk.CTkLabel(self.dict_display, text="Diccionario vacío", text_color="gray").pack(pady=20)
+            ctk.CTkLabel(self.dict_display, text="Diccionario vacío\n\nAgrega cálculos para comenzar", text_color="gray", font=ctk.CTkFont(size=14)).pack(pady=40)
         else:
             for key, values in self.diccionario.items():
+                # Buscar el nombre del empleado
+                empleado, _ = self.data_manager.buscar_por_id(key)
+                if empleado:
+                    nombre_completo = f"{empleado.get('nombre', '')} {empleado.get('apellido', '')}"
+                else:
+                    nombre_completo = "Empleado Desconocido"
+                
                 key_frame = ctk.CTkFrame(self.dict_display, fg_color="#1a1a1a", border_width=2, border_color="#dc2626")
                 key_frame.pack(fill="x", pady=10, padx=5)
                 
-                ctk.CTkLabel(key_frame, text=f"🔑 {key}", font=ctk.CTkFont(weight="bold"), text_color="#dc2626").pack(anchor="w", padx=10, pady=(10, 5))
+                # Header
+                header_frame = ctk.CTkFrame(key_frame, fg_color="transparent")
+                header_frame.pack(fill="x", padx=10, pady=(10, 5))
                 
+                ctk.CTkLabel(header_frame, text=f"🔑 {key}", font=ctk.CTkFont(size=12, weight="bold"), text_color="#dc2626").pack(side="left")
+                ctk.CTkLabel(header_frame, text=f"👤 {nombre_completo}", font=ctk.CTkFont(size=11), text_color="gray").pack(side="left", padx=10)
+                
+                # Cálculos
                 for subkey, subvalue in values.items():
-                    ctk.CTkLabel(key_frame, text=f"  • {subkey}: {subvalue}", text_color="gray").pack(anchor="w", padx=20, pady=2)
+                    calc_frame = ctk.CTkFrame(key_frame, fg_color="#2b2b2b")
+                    calc_frame.pack(fill="x", padx=15, pady=3)
+                    
+                    ctk.CTkLabel(calc_frame, text=f"• {subkey}:", text_color="lightgray", font=ctk.CTkFont(size=11)).pack(side="left", padx=10, pady=5)
+                    ctk.CTkLabel(calc_frame, text=f"${float(subvalue):,.2f}", text_color="#2fa572", font=ctk.CTkFont(size=11, weight="bold")).pack(side="right", padx=10, pady=5)
                 
-                ctk.CTkLabel(key_frame, text="").pack(pady=5,row=0, column=0, sticky="nsew", padx=(0, 10))
-        
-        ctk.CTkLabel(left_panel, text="Agregar a la Cola", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=20)
-        
-        ctk.CTkLabel(left_panel, text="ID Empleado:").pack(pady=(10, 5), padx=20, anchor="w")
-        id_entry = ctk.CTkEntry(left_panel, placeholder_text="Ej: EMP001")
-        id_entry.pack(pady=(0, 10), padx=20, fill="x")
-        
-        ctk.CTkLabel(left_panel, text="Monto:").pack(pady=(10, 5), padx=20, anchor="w")
-        monto_entry = ctk.CTkEntry(left_panel, placeholder_text="Ej: 1500.00")
-        monto_entry.pack(pady=(0, 10), padx=20, fill="x")
-        
-        self.queue_display = ctk.CTkScrollableFrame(left_panel, fg_color="#2b2b2b")
-        self.queue_display.pack(fill="both", expand=True, padx=20, pady=10)
-        
-        def enqueue():
-            id_emp = id_entry.get()
-            monto = monto_entry.get()
-            if id_emp and monto:
-                self.cola_cheques.append(f"{id_emp}: ${monto}")
-                self.update_queue_display()
-                id_entry.delete(0, 'end')
-                monto_entry.delete(0, 'end')
-        
-        def dequeue():
-            if self.cola_cheques:
-                self.cola_cheques.pop(0)
-                self.update_queue_display()
-        
-        ctk.CTkButton(left_panel, text="➕ ENQUEUE", command=enqueue, fg_color="#2fa572", hover_color="#25824f").pack(pady=10, padx=20, fill="x")
-        ctk.CTkButton(left_panel, text="✅ DEQUEUE", command=dequeue, fg_color="#3b8ed0", hover_color="#2d6fa3").pack(pady=10, padx=20, fill="x")
-        
-        self.update_queue_display()
-    
-    def create_right_panel(self, parent):
-        right_panel = ctk.CTkFrame(parent, fg_color="#1a1a1a")
-        right_panel.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
-        
-        ctk.CTkLabel(right_panel, text="Visualización de Cola (FIFO)", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=20)
-        
-        self.display_frame = ctk.CTkScrollableFrame(right_panel, fg_color="#2b2b2b")
-        self.display_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
-    
-    def update_queue_display(self):
-        for widget in self.queue_display.winfo_children():
-            widget.destroy()
-        
-        if not self.cola_cheques:
-            ctk.CTkLabel(self.queue_display, text="Cola vacía", text_color="gray").pack(pady=20)
-        else:
-            for idx, item in enumerate(self.cola_cheques):
-                item_frame = ctk.CTkFrame(self.queue_display, fg_color="#1a1a1a")
-                item_frame.pack(fill="x", pady=5, padx=5)
-                
-                position = "← SIGUIENTE" if idx == 0 else f"Posición {idx}"
-                color = "#2fa572" if idx == 0 else "gray"
-                
-                ctk.CTkLabel(item_frame, text=f"{position}: {item}", text_color=color).pack(side="left", padx=10, pady=10)
+                # Espacio al final
+                ctk.CTkLabel(key_frame, text="").pack(pady=5)

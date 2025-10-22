@@ -1,17 +1,11 @@
-id,nombre,apellido,edad,telefono,correo
-EMP001,Juan,Pérez,30,8765-1234,juan.perez@empresa.com
-EMP002,María,García,28,8765-2345,maria.garcia@empresa.com
-EMP003,Carlos,López,35,8765-3456,carlos.lopez@empresa.com
-EMP004,Ana,Martínez,32,8765-4567,ana.martinez@empresa.com
-EMP005,Luis,Rodríguez,40,8765-5678,luis.rodriguez@empresa.com
-EMP006,Sofia,Fernández,25,8765-6789,sofia.fernandez@empresa.com
-EMP007,Miguel,Sánchez,29,8765-7890,miguel.sanchez@empresa.com
-EMP008,Elena,Torres,31,8765-8901,elena.torres@empresa.com
-EMP009,David,Ramírez,36,8765-9012,david.ramirez@empresa.com
-EMP010,Laura,Díaz,27,8765-0123,laura.diaz@empresa.com
-EMP011,Roberto,Vega,38,8765-1111,roberto.vega@empresa.com
-EMP012,Patricia,Morales,26,8765-2222,patricia.morales@empresa.com
-EMP013,Francisco,Ruiz,45,8765-3333,francisco.ruiz@empresa.com
-EMP014,Gabriela,Herrera,33,8765-4444,gabriela.herrera@empresa.com
-EMP015,Jorge,Castro,29,8765-5555,jorge.castro@empresa.com
-EMP016,Isabel,Ortiz,34,8765-6666,
+id,nombre,apellido,departamento,puesto,salario,tipo_pago,fecha_ingreso
+EMP001,Juan,Pérez,Ingeniería,Desarrollador Senior,3500.00,Quincenal,2020-01-15
+EMP002,María,García,Administración,Gerente de RRHH,4200.00,Mensual,2019-03-20
+EMP003,Carlos,López,Ventas,Ejecutivo de Ventas,2800.00,Quincenal,2021-06-10
+EMP004,Ana,Martínez,Ingeniería,QA Tester,2500.00,Quincenal,2021-09-01
+EMP005,Pedro,Rodríguez,Administración,Contador,3200.00,Mensual,2018-11-05
+EMP006,Laura,Fernández,Ingeniería,Desarrollador Junior,2200.00,Quincenal,2022-01-20
+EMP007,Diego,Sánchez,Ventas,Coordinador de Ventas,3000.00,Quincenal,2020-07-15
+EMP008,Sofia,Torres,Ingeniería,DevOps Engineer,3800.00,Quincenal,2019-12-01
+EMP009,Miguel,Ramírez,Administración,Asistente Administrativo,1800.00,Quincenal,2022-03-10
+EMP010,Carmen,Flores,Ventas,Representante de Ventas,2400.00,Semanal,2021-11-22

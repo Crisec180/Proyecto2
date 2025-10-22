@@ -8,6 +8,7 @@ class EmpleadosView:
     def __init__(self, parent, data_manager):
         self.parent = parent
         self.data_manager = data_manager
+        self.empleado_seleccionado = None
     
     def render(self):
         """Renderiza la vista de empleados"""
@@ -27,13 +28,22 @@ class EmpleadosView:
         )
         title_label.pack(anchor="w")
         
+        # Mostrar empleado seleccionado
+        empleado_actual = self.data_manager.obtener_empleado_seleccionado()
+        if empleado_actual:
+            texto_seleccion = f"✓ Empleado Seleccionado: {empleado_actual.get('nombre', '')} {empleado_actual.get('apellido', '')} (ID: {empleado_actual.get('id', '')})"
+            color = "#2fa572"
+        else:
+            texto_seleccion = "⚠ No hay empleado seleccionado"
+            color = "gray"
+        
         subtitle_label = ctk.CTkLabel(
             header_frame,
-            text="Visualización de todos los empleados cargados",
-            font=ctk.CTkFont(size=14),
-            text_color="gray"
+            text=texto_seleccion,
+            font=ctk.CTkFont(size=14, weight="bold"),
+            text_color=color
         )
-        subtitle_label.pack(anchor="w")
+        subtitle_label.pack(anchor="w", pady=(5, 0))
     
     def create_search_and_sort_controls(self):
         """Crea los controles de búsqueda y ordenamiento"""
@@ -47,12 +57,23 @@ class EmpleadosView:
             placeholder_text="🔍 Buscar empleado (Nombre/Apellido/ID)...",
             height=40
         )
-        self.search_entry.grid(row=0, column=1, padx=(0, 10), sticky="ew")
+        self.search_entry.grid(row=0, column=0, padx=(0, 10), sticky="ew")
+        search_frame.grid_columnconfigure(0, weight=1)
+        
+        ctk.CTkButton(
+            search_frame,
+            text="🔍 Buscar (Binary Search)",
+            command=self.buscar,
+            width=200,
+            fg_color="#3b8ed0",
+            hover_color="#2d6fa3",
+            font=ctk.CTkFont(size=12)
+        ).grid(row=0, column=1, padx=5)
         
         # Frame de botones de ordenamiento
         sort_frame = ctk.CTkFrame(self.parent, fg_color="transparent")
         sort_frame.grid(row=2, column=0, sticky="ew", pady=(0, 20))
-        sort_frame.grid_columnconfigure(4, weight=1)
+        sort_frame.grid_columnconfigure(5, weight=1)
         
         ctk.CTkLabel(sort_frame, text="Ordenar por:", font=ctk.CTkFont(weight="bold")).grid(
             row=0, column=0, padx=(0, 10)
@@ -77,11 +98,11 @@ class EmpleadosView:
         
         ctk.CTkButton(
             sort_frame,
-            text="🔍 Buscar (Binary Search)",
-            command=self.buscar,
-            width=150,
-            fg_color="#3b8ed0",
-            hover_color="#2d6fa3",
+            text="💾 Guardar CSV",
+            command=self.guardar_csv,
+            width=120,
+            fg_color="#dc2626",
+            hover_color="#b91c1c",
             font=ctk.CTkFont(size=12)
         ).grid(row=0, column=4, padx=5, sticky="e")
     
@@ -94,12 +115,12 @@ class EmpleadosView:
         
         scrollable = ctk.CTkScrollableFrame(table_frame, fg_color="#2b2b2b")
         scrollable.grid(row=0, column=0, sticky="nsew")
-        scrollable.grid_columnconfigure(0, weight=1)
         
         empleados = self.data_manager.obtener_empleados()
         
         if empleados:
-            headers = list(empleados[0].keys())
+            # Crear encabezados
+            headers = list(empleados[0].keys()) + ["ACCIONES"]
             for i, header in enumerate(headers):
                 label = ctk.CTkLabel(
                     scrollable,
@@ -110,15 +131,40 @@ class EmpleadosView:
                 )
                 label.grid(row=0, column=i, padx=5, pady=5, sticky="ew")
             
+            # Crear filas de empleados
+            empleado_actual = self.data_manager.obtener_empleado_seleccionado()
+            id_seleccionado = empleado_actual.get('id') if empleado_actual else None
+            
             for row_idx, empleado in enumerate(empleados, 1):
+                es_seleccionado = empleado.get('id') == id_seleccionado
+                bg_color = "#2d5016" if es_seleccionado else ("#2b2b2b" if row_idx % 2 == 0 else "#1a1a1a")
+                
+                # Mostrar datos del empleado
                 for col_idx, value in enumerate(empleado.values()):
                     label = ctk.CTkLabel(
                         scrollable,
                         text=str(value),
-                        fg_color="#2b2b2b" if row_idx % 2 == 0 else "#1a1a1a"
+                        fg_color=bg_color,
+                        text_color="#2fa572" if es_seleccionado else "white"
                     )
                     label.grid(row=row_idx, column=col_idx, padx=5, pady=5, sticky="ew")
-
+                
+                # Botón de selección
+                btn_text = "✓ SELECCIONADO" if es_seleccionado else "Seleccionar"
+                btn_color = "#2fa572" if es_seleccionado else "#3b8ed0"
+                btn_hover = "#25824f" if es_seleccionado else "#2d6fa3"
+                
+                select_btn = ctk.CTkButton(
+                    scrollable,
+                    text=btn_text,
+                    command=lambda emp=empleado: self.seleccionar_empleado(emp),
+                    width=120,
+                    height=30,
+                    fg_color=btn_color,
+                    hover_color=btn_hover,
+                    font=ctk.CTkFont(size=11)
+                )
+                select_btn.grid(row=row_idx, column=len(headers)-1, padx=5, pady=5)
         else:
             no_data = ctk.CTkLabel(
                 scrollable,
@@ -126,6 +172,15 @@ class EmpleadosView:
                 text_color="gray"
             )
             no_data.pack(pady=50)
+    
+    def seleccionar_empleado(self, empleado):
+        """Selecciona un empleado"""
+        self.data_manager.seleccionar_empleado(empleado)
+        messagebox.showinfo(
+            "Empleado Seleccionado", 
+            f"Has seleccionado a:\n\n{empleado.get('nombre', '')} {empleado.get('apellido', '')}\nID: {empleado.get('id', '')}\n\nAhora puedes usar este empleado en Cola, Pila, Lista y Diccionario."
+        )
+        self.render()  # Refrescar vista
     
     def ordenar(self, campo):
         """Ordena empleados por el campo especificado usando Merge Sort"""
@@ -148,3 +203,11 @@ class EmpleadosView:
             for key, value in empleado.items():
                 resultado += f"{key.upper()}: {value}\n"
             messagebox.showinfo("Resultado de Búsqueda", resultado)
+    
+    def guardar_csv(self):
+        """Guarda los cambios en el archivo CSV"""
+        exito, mensaje = self.data_manager.guardar_csv()
+        if exito:
+            messagebox.showinfo("Éxito", mensaje)
+        else:
+            messagebox.showerror("Error", mensaje)

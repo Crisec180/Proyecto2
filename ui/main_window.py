@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
+import os
 
 from core.data_manager import DataManager
 from ui.dashboard_view import DashboardView
@@ -8,7 +9,6 @@ from ui.cola_view import ColaView
 from ui.pila_view import PilaView
 from ui.diccionario_view import DiccionarioView
 from ui.lista_view import ListaView
-from ui.caja_chica_view import CajaChicaView
 from ui.pagos_view import PagosView
 
 class PayrollSystem(ctk.CTk):
@@ -25,12 +25,49 @@ class PayrollSystem(ctk.CTk):
         self.pila_contratos = []
         self.diccionario_calculos = {}
         self.lista_impresion = []
-        self.caja_chica_balance = 5000.00
-        self.movimientos_caja = []
+        
+        # Intentar cargar CSV automáticamente
+        self.auto_load_csv()
         
         # Crear el layout principal
         self.create_layout()
+    
+    def auto_load_csv(self):
+        """Intenta cargar automáticamente un archivo CSV si existe en la carpeta actual"""
+        # Obtener el directorio actual donde está el script
+        directorio_actual = os.path.dirname(os.path.abspath(__file__))
         
+        # Lista de posibles ubicaciones del CSV
+        posibles_archivos = [
+            # Ruta absoluta desde donde está main_window.py
+            os.path.join(directorio_actual, 'empleados.csv'),
+            # Si main_window.py está en la raíz
+            'empleados.csv',
+            # Si está en una subcarpeta
+            os.path.join(directorio_actual, '..', 'empleados.csv'),
+            # Otras ubicaciones comunes
+            'data/empleados.csv',
+            'datos/empleados.csv',
+            'ui/empleados.csv',
+        ]
+        
+        print(f" Buscando CSV en directorio: {directorio_actual}")
+        
+        for archivo in posibles_archivos:
+            archivo_normalizado = os.path.normpath(archivo)
+            print(f"   Intentando: {archivo_normalizado}")
+            
+            if os.path.exists(archivo_normalizado):
+                exito, mensaje = self.data_manager.cargar_csv(archivo_normalizado)
+                if exito:
+                    print(f" {mensaje}")
+                    print(f" CSV cargado desde: {archivo_normalizado}")
+                    return
+        
+        print(" No se encontró archivo CSV para cargar automáticamente")
+        print(f" Coloca 'empleados.csv' en: {directorio_actual}")
+        print(" O usa el botón ' Cargar CSV' para seleccionarlo manualmente")
+    
     def create_layout(self):
         """Crea el layout principal con sidebar y frame principal"""
         self.grid_columnconfigure(1, weight=1)
@@ -44,7 +81,7 @@ class PayrollSystem(ctk.CTk):
         self.main_frame.grid_rowconfigure(1, weight=1)
         
         self.show_dashboard()
-        
+    
     def create_sidebar(self):
         """Crea el sidebar con botones de navegación"""
         sidebar = ctk.CTkFrame(self, width=250, corner_radius=0, fg_color="#1a1a1a")
@@ -61,29 +98,37 @@ class PayrollSystem(ctk.CTk):
         
         self.load_csv_btn = ctk.CTkButton(
             sidebar,
-            text="📂 Cargar CSV",
+            text=" Cargar CSV",
             command=self.load_csv,
             fg_color="#2b2b2b",
-            hover_color="#3b3b3b"
+            hover_color="#3b3b3b",
+            height=35
         )
         self.load_csv_btn.pack(pady=10, padx=20, fill="x")
         
         separator = ctk.CTkFrame(sidebar, height=2, fg_color="#3b3b3b")
         separator.pack(pady=20, padx=20, fill="x")
         
+        # Título de sección
+        ctk.CTkLabel(
+            sidebar,
+            text="NAVEGACIÓN",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            text_color="gray"
+        ).pack(pady=(0, 10), padx=20, anchor="w")
+        
         nav_buttons = [
-            ("🏠 Dashboard", self.show_dashboard),
-            ("👥 Empleados", self.show_empleados),
-            ("📋 Cola: Calcular Neto", self.show_cola_neto),
-            ("📚 Pila: Neto por Horas", self.show_pila_horas),
-            ("📚 Pila: Neto Contrato", self.show_pila_contratos),
-            ("📖 Diccionario: Cálculos", self.show_diccionario),
-            ("📄 Lista: Imprimir Cheques", self.show_lista_cheques),
-            ("💰 Caja Chica", self.show_caja_chica),
-            ("💵 Procesar Pagos", self.show_procesar_pagos)
+            ("🏠 Dashboard", self.show_dashboard, "#3b8ed0"),
+            ("👥 Empleados", self.show_empleados, "#2fa572"),
+            ("📋 Cola: Calcular Neto", self.show_cola_neto, "#2fa572"),
+            ("📚 Pila: Neto por Horas", self.show_pila_horas, "#d97706"),
+            ("📚 Pila: Neto Contrato", self.show_pila_contratos, "#d97706"),
+            ("📖 Diccionario: Cálculos", self.show_diccionario, "#dc2626"),
+            ("📄 Lista: Imprimir Cheques", self.show_lista_cheques, "#2fa572"),
+            ("💵 Procesar Pagos", self.show_procesar_pagos, "#6b7280")
         ]
         
-        for text, command in nav_buttons:
+        for text, command, color in nav_buttons:
             btn = ctk.CTkButton(
                 sidebar,
                 text=text,
@@ -91,9 +136,22 @@ class PayrollSystem(ctk.CTk):
                 fg_color="transparent",
                 hover_color="#2b2b2b",
                 anchor="w",
-                height=40
+                height=40,
+                text_color=color
             )
             btn.pack(pady=5, padx=20, fill="x")
+        
+        # Información al final
+        separator2 = ctk.CTkFrame(sidebar, height=2, fg_color="#3b3b3b")
+        separator2.pack(side="bottom", pady=20, padx=20, fill="x")
+        
+        info_label = ctk.CTkLabel(
+            sidebar,
+            text="v1.0 | Estructuras de Datos",
+            font=ctk.CTkFont(size=9),
+            text_color="gray"
+        )
+        info_label.pack(side="bottom", pady=10)
     
     def clear_main_frame(self):
         """Limpia todos los widgets del frame principal"""
@@ -118,9 +176,13 @@ class PayrollSystem(ctk.CTk):
     def show_dashboard(self):
         """Muestra la vista del Dashboard"""
         self.clear_main_frame()
-        view = DashboardView(self.main_frame, self.data_manager, 
-                           len(self.cola_cheques), len(self.pila_horas), 
-                           len(self.diccionario_calculos))
+        view = DashboardView(
+            self.main_frame, 
+            self.data_manager, 
+            len(self.cola_cheques), 
+            len(self.pila_horas), 
+            len(self.diccionario_calculos)
+        )
         view.render()
     
     def show_empleados(self):
@@ -132,41 +194,57 @@ class PayrollSystem(ctk.CTk):
     def show_cola_neto(self):
         """Muestra la vista de Cola"""
         self.clear_main_frame()
-        view = ColaView(self.main_frame, self.cola_cheques)
+        view = ColaView(self.main_frame, self.cola_cheques, self.data_manager)
         view.render()
     
     def show_pila_horas(self):
         """Muestra la vista de Pila de Horas"""
         self.clear_main_frame()
-        view = PilaView(self.main_frame, self.pila_horas, "Neto por Horas", "Horas trabajadas")
+        view = PilaView(
+            self.main_frame, 
+            self.pila_horas, 
+            "Neto por Horas", 
+            "Horas trabajadas",
+            self.data_manager
+        )
         view.render()
     
     def show_pila_contratos(self):
         """Muestra la vista de Pila de Contratos"""
         self.clear_main_frame()
-        view = PilaView(self.main_frame, self.pila_contratos, "Neto Contrato", "Contratos")
+        view = PilaView(
+            self.main_frame, 
+            self.pila_contratos, 
+            "Neto Contrato", 
+            "Valor del contrato",
+            self.data_manager
+        )
         view.render()
     
     def show_diccionario(self):
         """Muestra la vista de Diccionario"""
         self.clear_main_frame()
-        view = DiccionarioView(self.main_frame, self.diccionario_calculos)
+        view = DiccionarioView(self.main_frame, self.diccionario_calculos, self.data_manager)
         view.render()
     
     def show_lista_cheques(self):
         """Muestra la vista de Lista de Cheques"""
         self.clear_main_frame()
-        view = ListaView(self.main_frame, self.lista_impresion)
-        view.render()
-    
-    def show_caja_chica(self):
-        """Muestra la vista de Caja Chica"""
-        self.clear_main_frame()
-        view = CajaChicaView(self.main_frame, self.caja_chica_balance, self.movimientos_caja)
+        view = ListaView(self.main_frame, self.lista_impresion, self.data_manager)
         view.render()
     
     def show_procesar_pagos(self):
         """Muestra la vista de Procesamiento de Pagos"""
         self.clear_main_frame()
-        view = PagosView(self.main_frame)
+        view = PagosView(self.main_frame, self.data_manager)
         view.render()
+
+
+if __name__ == "__main__":
+    # Configurar tema
+    ctk.set_appearance_mode("dark")
+    ctk.set_default_color_theme("blue")
+    
+    # Crear y ejecutar la aplicación
+    app = PayrollSystem()
+    app.mainloop()
