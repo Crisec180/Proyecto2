@@ -3,10 +3,11 @@ from collections import deque
 #clases que necesita
 from CalculosPILAS import CalcularNetoXContrato
 from CalculosPILAS import ObtenerNetoXHoras
+from ListaEmpleados import ListaEmpleados
 
 class CalculaNetoEmpleado:
-    def __init__(self, empleado: Empleado, horas_extras, otras_deducciones):
-        self.empleado = empleado
+    def __init__(self, lista_empleados: ListaEmpleados, horas_extras, otras_deducciones):
+        self.lista_empleados = lista_empleados
         self.horas_extras = horas_extras
         self.otras_deducciones = otras_deducciones
 
@@ -30,16 +31,16 @@ class CalculaNetoEmpleado:
 
 #-----------------------------------------------------------------------------------------
     def calcular_neto(self):
-        salario_base = self.empleado.salario_base
-        deducciones = self.empleado.deducciones
-        horas_extras = self.empleado.horas_extras
-
-        total_horas_extras = sum(
-            hora_extra.valor_hora * hora_extra.horas_extra for hora_extra in horas_extras
-        )
-
-        salario_neto = salario_base + total_horas_extras - deducciones
-        return salario_neto
+        total_neto = 0
+        for empleado in self.lista_empleados.obtener_empleados():
+            if hasattr(empleado, 'contrato'):
+                calculo = CalcularNetoXContrato(empleado, self.otras_deducciones)
+            elif hasattr(empleado, 'horas_trabajadas'):
+                calculo = ObtenerNetoXHoras(empleado, self.horas_extras, self.otras_deducciones)
+            else:
+                continue
+            neto = calculo.calcular_neto()
+            total_neto += neto
     
     def cola_neto(self, empleado: Empleado):
         cola = deque()
