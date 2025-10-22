@@ -1,4 +1,5 @@
 import csv
+import os
 from Ordenamiento import merge_sort
 from Busqueda_binaria import binary_search
 
@@ -76,13 +77,14 @@ class DataManager:
             return False, "No hay empleados cargados"
         
         try:
+            # Ordenar considerando mayúsculas/minúsculas
             self.empleados_ordenados = merge_sort(self.empleados, key=lambda emp: str(emp.get(campo, '')).lower())
             return True, f"Empleados ordenados por {campo} usando Merge Sort O(n log n)"
         except Exception as e:
             return False, f"Error al ordenar: {str(e)}"
     
     def buscar_por_nombre(self, valor_busqueda):
-        """Busca un empleado por nombre usando Binary Search"""
+        """Busca un empleado por nombre usando Binary Search (case-insensitive)"""
         if not self.empleados_ordenados:
             return None, "Primero ordena los empleados por nombre"
         
@@ -91,22 +93,36 @@ class DataManager:
             return None, "Ingresa un valor para buscar"
         
         # Crear lista de nombres en minúsculas para la búsqueda
-        nombres = [emp.get('nombre', '').lower() for emp in self.empleados_ordenados]
+        nombres_lower = [emp.get('nombre', '').lower() for emp in self.empleados_ordenados]
         
-        # Usar binary search
-        indice = binary_search(nombres, valor_busqueda)
+        # Buscar usando binary search
+        indice = binary_search(nombres_lower, valor_busqueda)
         
         if indice != -1:
-            return self.empleados_ordenados[indice], None
+            empleado_encontrado = self.empleados_ordenados[indice]
+            # Mensaje con el nombre original (con mayúsculas correctas)
+            nombre_original = empleado_encontrado.get('nombre', '')
+            return empleado_encontrado, None
         else:
-            return None, f"No se encontró empleado con nombre: {valor_busqueda}"
+            # Intentar búsqueda parcial (por si escribió solo parte del nombre)
+            for idx, nombre_lower in enumerate(nombres_lower):
+                if valor_busqueda in nombre_lower:
+                    empleado_encontrado = self.empleados_ordenados[idx]
+                    return empleado_encontrado, None
+            
+            # Si no se encuentra ni exacto ni parcial
+            return None, f"No se encontró empleado con nombre: {valor_busqueda.title()}"
     
     def buscar_por_id(self, id_empleado):
-        """Busca un empleado por ID"""
+        """Busca un empleado por ID (case-insensitive)"""
         empleados_list = self.empleados_ordenados if self.empleados_ordenados else self.empleados
         
+        # Normalizar el ID de búsqueda
+        id_busqueda = str(id_empleado).strip().upper()
+        
         for emp in empleados_list:
-            if emp.get('id') == id_empleado:
+            id_emp = str(emp.get('id', '')).strip().upper()
+            if id_emp == id_busqueda:
                 return emp, None
         
         return None, f"No se encontró empleado con ID: {id_empleado}"

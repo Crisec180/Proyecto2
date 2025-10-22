@@ -1,6 +1,5 @@
 import customtkinter as ctk
 from tkinter import messagebox
-from ListaEmpleados import ListaEmpleados
 
 class EmpleadosView:
     """Vista para la gestión de empleados con Merge Sort y Binary Search"""
@@ -34,7 +33,7 @@ class EmpleadosView:
             texto_seleccion = f"✓ Empleado Seleccionado: {empleado_actual.get('nombre', '')} {empleado_actual.get('apellido', '')} (ID: {empleado_actual.get('id', '')})"
             color = "#2fa572"
         else:
-            texto_seleccion = "⚠ No hay empleado seleccionado"
+            texto_seleccion = "⚠ No hay empleado seleccionado - Haz clic en 'Seleccionar' para elegir uno"
             color = "gray"
         
         subtitle_label = ctk.CTkLabel(
@@ -149,20 +148,25 @@ class EmpleadosView:
                     )
                     label.grid(row=row_idx, column=col_idx, padx=5, pady=5, sticky="ew")
                 
-                # Botón de selección
-                btn_text = "✓ SELECCIONADO" if es_seleccionado else "Seleccionar"
-                btn_color = "#2fa572" if es_seleccionado else "#3b8ed0"
-                btn_hover = "#25824f" if es_seleccionado else "#2d6fa3"
+                # Botón de selección/deselección
+                if es_seleccionado:
+                    btn_text = "✓ SELECCIONADO (Click para deseleccionar)"
+                    btn_color = "#2fa572"
+                    btn_hover = "#25824f"
+                else:
+                    btn_text = "Seleccionar"
+                    btn_color = "#3b8ed0"
+                    btn_hover = "#2d6fa3"
                 
                 select_btn = ctk.CTkButton(
                     scrollable,
                     text=btn_text,
-                    command=lambda emp=empleado: self.seleccionar_empleado(emp),
-                    width=120,
+                    command=lambda emp=empleado, sel=es_seleccionado: self.toggle_seleccion(emp, sel),
+                    width=250 if es_seleccionado else 120,
                     height=30,
                     fg_color=btn_color,
                     hover_color=btn_hover,
-                    font=ctk.CTkFont(size=11)
+                    font=ctk.CTkFont(size=11, weight="bold" if es_seleccionado else "normal")
                 )
                 select_btn.grid(row=row_idx, column=len(headers)-1, padx=5, pady=5)
         else:
@@ -173,13 +177,23 @@ class EmpleadosView:
             )
             no_data.pack(pady=50)
     
-    def seleccionar_empleado(self, empleado):
-        """Selecciona un empleado"""
-        self.data_manager.seleccionar_empleado(empleado)
-        messagebox.showinfo(
-            "Empleado Seleccionado", 
-            f"Has seleccionado a:\n\n{empleado.get('nombre', '')} {empleado.get('apellido', '')}\nID: {empleado.get('id', '')}\n\nAhora puedes usar este empleado en Cola, Pila, Lista y Diccionario."
-        )
+    def toggle_seleccion(self, empleado, esta_seleccionado):
+        """Selecciona o deselecciona un empleado según su estado actual"""
+        if esta_seleccionado:
+            # Deseleccionar
+            self.data_manager.seleccionar_empleado(None)
+            messagebox.showinfo(
+                "Empleado Deseleccionado", 
+                f"Se ha deseleccionado a:\n\n{empleado.get('nombre', '')} {empleado.get('apellido', '')}\n\nAhora puedes seleccionar otro empleado o trabajar sin selección."
+            )
+        else:
+            # Seleccionar
+            self.data_manager.seleccionar_empleado(empleado)
+            messagebox.showinfo(
+                "Empleado Seleccionado", 
+                f"Has seleccionado a:\n\n{empleado.get('nombre', '')} {empleado.get('apellido', '')}\nID: {empleado.get('id', '')}\n\nAhora puedes usar este empleado en Cola, Pila, Lista y Diccionario.\n\nPara deseleccionar, haz clic nuevamente en el botón."
+            )
+        
         self.render()  # Refrescar vista
     
     def ordenar(self, campo):
