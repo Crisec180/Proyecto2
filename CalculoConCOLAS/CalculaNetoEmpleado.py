@@ -1,10 +1,26 @@
 from Empleado import Empleado
+from collections import deque
+#clases que necesita
+from CalculosPILAS import CalcularNetoXContrato
+from CalculosPILAS import ObtenerNetoXHoras
 
 class CalculaNetoEmpleado:
     def __init__(self, empleado: Empleado, horas_extras, otras_deducciones):
         self.empleado = empleado
         self.horas_extras = horas_extras
         self.otras_deducciones = otras_deducciones
+
+    #COLA PARA GUARDAR LOS RESULTADOS
+    def __init__(self):
+        self.cola=deque()
+
+    def encolar(self, cheque):
+        self.cola.append(cheque)
+
+    def desencolar(self):
+        if not self.esta_vacia():
+            return self.cola.popleft()
+        return None
 
     def calcular_neto(self):
         salario_base = self.empleado.salario_base
@@ -17,3 +33,13 @@ class CalculaNetoEmpleado:
 
         salario_neto = salario_base + total_horas_extras - deducciones
         return salario_neto
+    
+    def cola_neto(self, empleado: Empleado):
+        cola = deque()
+        salario_neto = self.calcular_neto()
+        cola.append({
+            "nombre": empleado.nombre,
+            "apellido": empleado.apellido,
+            "salario_neto": salario_neto
+        })
+        return cola
