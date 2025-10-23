@@ -7,10 +7,10 @@ class CalcularNetoXContrato:
         self.empleado = empleado
         self.deducciones = deducciones
 
-    def calcular_neto(self):
-       bruto = self.empleado.salario_bruto()
-       CalcularDeduccionNormal = CalcularDeduccionNormal.CalculoDeDeducciones(bruto)
-       deduccion_normal = CalcularDeduccionNormal.calcular_deducciones()
-       CalcularOtrasDeducciones = CalculaOtrasDeducciones.CalculoDeOtrasDeducciones(bruto)
-       otras_deducciones = CalcularOtrasDeducciones.calcular_otras_deducciones()
-       return bruto - deduccion_normal - otras_deducciones
+    def calcular_neto_por_contrato(self):
+
+        deduccion_normal = CalcularDeduccionNormal.CalcularDeduccionNormal(self.empleado, self.deducciones)
+        otras_deducciones = CalculaOtrasDeducciones.CalculaOtrasDeducciones(self.empleado, self.deducciones)
+
+        neto = self.empleado.salario_base - deduccion_normal.calcular_deduccion() - otras_deducciones.calcular_deduccion()
+        return neto

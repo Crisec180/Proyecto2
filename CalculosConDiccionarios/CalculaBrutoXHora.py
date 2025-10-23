@@ -1,4 +1,4 @@
-
+from typing import Any, Dict 
 
 class CalculoDeSalarioBruto:
     def __init__(self, empleado, horas_trabajadas, valor_hora):
