@@ -1,4 +1,5 @@
 from Empleado import Empleado
+from Empresa import Empresa
 from collections import deque
 #clases que necesita
 from CalculosPILAS import CalcularNetoXContrato
@@ -28,13 +29,4 @@ class CalculaNetoEmpleado:
         return cant == 0
 
 #-----------------------------------------------------------------------------------------
-    def calcula_neto(self, empleado: Empleado):
-        if empleado.tipo_contrato == "Contrato por horas":
-            calculo_neto = ObtenerNetoXHoras.ObtenerNetoXHoras(empleado, self.horas_extras, self.otras_deducciones)
-            neto = calculo_neto.calcular_neto()
-        elif empleado.tipo_contrato == "Contrato mensual":
-            calculo_neto = CalcularNetoXContrato.CalcularNetoXContrato(empleado, self.otras_deducciones)
-            neto = calculo_neto.calcular_neto()
-        else:
-            neto = 0
-        return neto
+    #def calcula_neto(self, empleado: Empleado)
