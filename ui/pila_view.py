@@ -2,14 +2,14 @@ import customtkinter as ctk
 from tkinter import messagebox
 
 class PilaView:
-    """Vista para la gestión de Pila (LIFO)"""
     
-    def __init__(self, parent, pila, titulo, label_text, data_manager):
+    def __init__(self, parent, pila, titulo, label_text, data_manager, main_window):
         self.parent = parent
         self.pila = pila
         self.titulo = titulo
         self.label_text = label_text
         self.data_manager = data_manager
+        self.main_window = main_window
     
     def render(self):
         self.create_header()
@@ -32,7 +32,6 @@ class PilaView:
         subtitle = ctk.CTkLabel(header_frame, text=f"Visualización de la pila para cálculo de {self.titulo.lower()} (LIFO)", font=ctk.CTkFont(size=14), text_color="gray")
         subtitle.pack(anchor="w")
         
-        # Mostrar empleado seleccionado
         empleado = self.data_manager.obtener_empleado_seleccionado()
         if empleado:
             info = ctk.CTkLabel(
@@ -49,7 +48,6 @@ class PilaView:
         
         ctk.CTkLabel(left_panel, text="Agregar a la Pila", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=20)
         
-        # Selector de empleado
         ctk.CTkLabel(left_panel, text="Seleccionar Empleado:", font=ctk.CTkFont(size=12, weight="bold")).pack(pady=(10, 5), padx=20, anchor="w")
         
         empleados = self.data_manager.obtener_empleados()
@@ -58,7 +56,6 @@ class PilaView:
             empleado_menu = ctk.CTkOptionMenu(left_panel, values=opciones_empleados)
             empleado_menu.pack(pady=(0, 10), padx=20, fill="x")
             
-            # Pre-seleccionar si hay un empleado seleccionado
             empleado_actual = self.data_manager.obtener_empleado_seleccionado()
             if empleado_actual:
                 texto_actual = f"{empleado_actual.get('nombre', '')} {empleado_actual.get('apellido', '')} - {empleado_actual.get('id', '')}"
@@ -76,7 +73,6 @@ class PilaView:
         descripcion_entry = ctk.CTkEntry(left_panel, placeholder_text="Ej: Horas normales, Horas extra...")
         descripcion_entry.pack(pady=(0, 10), padx=20, fill="x")
         
-        # Vista previa de la pila
         ctk.CTkLabel(left_panel, text="Pila Actual (LIFO):", font=ctk.CTkFont(size=12, weight="bold")).pack(pady=(20, 5), padx=20, anchor="w")
         self.stack_display = ctk.CTkScrollableFrame(left_panel, fg_color="#2b2b2b", height=200)
         self.stack_display.pack(fill="both", expand=True, padx=20, pady=10)
@@ -92,8 +88,7 @@ class PilaView:
             
             if seleccion and valor and "No hay empleados" not in seleccion:
                 try:
-                    float(valor)  # Validar que sea número
-                    # Extraer ID del empleado
+                    float(valor)
                     id_emp = seleccion.split(" - ")[-1]
                     nombre_emp = seleccion.split(" - ")[0]
                     
@@ -105,6 +100,9 @@ class PilaView:
                     }
                     self.pila.append(item_info)
                     self.update_stack_display()
+                    
+                    self.main_window.guardar_estado_completo()
+                    
                     valor_entry.delete(0, 'end')
                     descripcion_entry.delete(0, 'end')
                     messagebox.showinfo("Éxito", f"Elemento agregado a la pila (PUSH) para {nombre_emp}")
@@ -117,6 +115,9 @@ class PilaView:
             if self.pila:
                 procesado = self.pila.pop()
                 self.update_stack_display()
+                
+                self.main_window.guardar_estado_completo()
+                
                 messagebox.showinfo("Procesado", f"Elemento procesado (POP):\n{procesado['nombre']}\nValor: {procesado['valor']}")
             else:
                 messagebox.showinfo("Pila Vacía", "No hay elementos en la pila")
@@ -131,6 +132,9 @@ class PilaView:
         def clear_stack():
             self.pila.clear()
             self.update_stack_display()
+            
+            self.main_window.guardar_estado_completo()
+            
             messagebox.showinfo("Pila Limpiada", "Todos los elementos fueron removidos")
         
         ctk.CTkButton(left_panel, text="⬆️ PUSH (Agregar al tope)", command=push, fg_color="#d97706", hover_color="#b45309").pack(pady=5, padx=20, fill="x")
@@ -141,7 +145,6 @@ class PilaView:
         self.update_stack_display()
     
     def get_placeholder(self):
-        """Retorna un placeholder apropiado según el tipo de pila"""
         if "Horas" in self.titulo:
             return "40"
         else:
@@ -168,15 +171,13 @@ class PilaView:
         self.update_display()
     
     def update_stack_display(self):
-        """Actualiza la vista previa pequeña de la pila"""
         for widget in self.stack_display.winfo_children():
             widget.destroy()
         
         if not self.pila:
             ctk.CTkLabel(self.stack_display, text="Pila vacía", text_color="gray", font=ctk.CTkFont(size=11)).pack(pady=10)
         else:
-            # Mostrar en orden inverso (el último es el tope)
-            for idx, item in enumerate(reversed(self.pila[-5:])):  # Últimos 5
+            for idx, item in enumerate(reversed(self.pila[-5:])):
                 pos = len(self.pila) - idx
                 texto = f"[{pos}] {item['nombre']} - {item['valor']}"
                 color = "#d97706" if idx == 0 else "gray"
@@ -189,21 +190,18 @@ class PilaView:
         self.update_display()
     
     def update_display(self):
-        """Actualiza la visualización principal de la pila"""
         for widget in self.display_frame.winfo_children():
             widget.destroy()
         
         if not self.pila:
             ctk.CTkLabel(self.display_frame, text="Pila vacía\n\nAgrega elementos para comenzar", text_color="gray", font=ctk.CTkFont(size=14)).pack(pady=40)
         else:
-            # Mostrar en orden inverso (el último agregado arriba)
             for idx, item in enumerate(reversed(self.pila)):
                 pos_real = len(self.pila) - idx
                 
                 item_frame = ctk.CTkFrame(self.display_frame, fg_color="#1a1a1a", border_width=2, border_color="#d97706" if idx == 0 else "#3b3b3b")
                 item_frame.pack(fill="x", pady=8, padx=5)
                 
-                # Header del item
                 position_text = "🔝 TOPE DE LA PILA" if idx == 0 else f"Posición #{pos_real}"
                 position_color = "#d97706" if idx == 0 else "gray"
                 
@@ -212,6 +210,5 @@ class PilaView:
                 
                 ctk.CTkLabel(header_frame, text=position_text, text_color=position_color, font=ctk.CTkFont(size=11, weight="bold")).pack(side="left")
                 
-                # Información del item
                 info_text = f"👤 {item['nombre']}\n📊 Valor: {item['valor']}\n📝 {item['descripcion']}\n🆔 ID: {item['id']}"
                 ctk.CTkLabel(item_frame, text=info_text, text_color="lightgray", justify="left", font=ctk.CTkFont(size=11)).pack(anchor="w", padx=15, pady=(5, 15))

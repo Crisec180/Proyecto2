@@ -2,12 +2,12 @@ import customtkinter as ctk
 from tkinter import messagebox
 
 class DiccionarioView:
-    """Vista para la gestión de Diccionario"""
     
-    def __init__(self, parent, diccionario, data_manager):
+    def __init__(self, parent, diccionario, data_manager, main_window):
         self.parent = parent
         self.diccionario = diccionario
         self.data_manager = data_manager
+        self.main_window = main_window
     
     def render(self):
         self.create_header()
@@ -30,7 +30,6 @@ class DiccionarioView:
         subtitle = ctk.CTkLabel(header_frame, text="Gestión de cálculos con estructura de diccionario", font=ctk.CTkFont(size=14), text_color="gray")
         subtitle.pack(anchor="w")
         
-        # Mostrar empleado seleccionado
         empleado = self.data_manager.obtener_empleado_seleccionado()
         if empleado:
             info = ctk.CTkLabel(
@@ -47,7 +46,6 @@ class DiccionarioView:
         
         ctk.CTkLabel(left_panel, text="Agregar al Diccionario", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=20)
         
-        # Selector de empleado como clave
         ctk.CTkLabel(left_panel, text="Empleado (Clave):", font=ctk.CTkFont(size=12, weight="bold")).pack(pady=(10, 5), padx=20, anchor="w")
         
         empleados = self.data_manager.obtener_empleados()
@@ -56,7 +54,6 @@ class DiccionarioView:
             key_menu = ctk.CTkOptionMenu(left_panel, values=opciones_empleados)
             key_menu.pack(pady=(0, 10), padx=20, fill="x")
             
-            # Pre-seleccionar si hay un empleado seleccionado
             empleado_actual = self.data_manager.obtener_empleado_seleccionado()
             if empleado_actual:
                 texto_actual = f"{empleado_actual.get('id', '')} - {empleado_actual.get('nombre', '')} {empleado_actual.get('apellido', '')}"
@@ -85,14 +82,16 @@ class DiccionarioView:
             
             if seleccion and value and "No hay empleados" not in seleccion:
                 try:
-                    float(value)  # Validar que sea número
-                    # Usar el ID como clave
+                    float(value)
                     key = seleccion.split(" - ")[0]
                     
                     if key not in self.diccionario:
                         self.diccionario[key] = {}
                     self.diccionario[key][tipo] = value
                     self.update_dict_display()
+                    
+                    self.main_window.guardar_estado_completo()
+                    
                     value_entry.delete(0, 'end')
                     messagebox.showinfo("Éxito", f"Cálculo agregado al diccionario para {key}")
                 except ValueError:
@@ -113,6 +112,9 @@ class DiccionarioView:
                     if respuesta:
                         del self.diccionario[key]
                         self.update_dict_display()
+                        
+                        self.main_window.guardar_estado_completo()
+                        
                         messagebox.showinfo("Éxito", f"Cálculos eliminados para {key}")
                 else:
                     messagebox.showinfo("No Encontrado", f"No hay cálculos para {key}")
@@ -139,7 +141,6 @@ class DiccionarioView:
             ctk.CTkLabel(self.dict_display, text="Diccionario vacío\n\nAgrega cálculos para comenzar", text_color="gray", font=ctk.CTkFont(size=14)).pack(pady=40)
         else:
             for key, values in self.diccionario.items():
-                # Buscar el nombre del empleado
                 empleado, _ = self.data_manager.buscar_por_id(key)
                 if empleado:
                     nombre_completo = f"{empleado.get('nombre', '')} {empleado.get('apellido', '')}"
@@ -149,14 +150,12 @@ class DiccionarioView:
                 key_frame = ctk.CTkFrame(self.dict_display, fg_color="#1a1a1a", border_width=2, border_color="#dc2626")
                 key_frame.pack(fill="x", pady=10, padx=5)
                 
-                # Header
                 header_frame = ctk.CTkFrame(key_frame, fg_color="transparent")
                 header_frame.pack(fill="x", padx=10, pady=(10, 5))
                 
                 ctk.CTkLabel(header_frame, text=f"🔑 {key}", font=ctk.CTkFont(size=12, weight="bold"), text_color="#dc2626").pack(side="left")
                 ctk.CTkLabel(header_frame, text=f"👤 {nombre_completo}", font=ctk.CTkFont(size=11), text_color="gray").pack(side="left", padx=10)
                 
-                # Cálculos
                 for subkey, subvalue in values.items():
                     calc_frame = ctk.CTkFrame(key_frame, fg_color="#2b2b2b")
                     calc_frame.pack(fill="x", padx=15, pady=3)
@@ -164,5 +163,4 @@ class DiccionarioView:
                     ctk.CTkLabel(calc_frame, text=f"• {subkey}:", text_color="lightgray", font=ctk.CTkFont(size=11)).pack(side="left", padx=10, pady=5)
                     ctk.CTkLabel(calc_frame, text=f"${float(subvalue):,.2f}", text_color="#2fa572", font=ctk.CTkFont(size=11, weight="bold")).pack(side="right", padx=10, pady=5)
                 
-                # Espacio al final
                 ctk.CTkLabel(key_frame, text="").pack(pady=5)

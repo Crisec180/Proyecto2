@@ -2,12 +2,12 @@ import customtkinter as ctk
 from tkinter import messagebox
 
 class ColaView:
-    """Vista para la gestión de Cola (FIFO)"""
     
-    def __init__(self, parent, cola_cheques, data_manager):
+    def __init__(self, parent, cola_cheques, data_manager, main_window):
         self.parent = parent
         self.cola_cheques = cola_cheques
         self.data_manager = data_manager
+        self.main_window = main_window
     
     def render(self):
         self.create_header()
@@ -30,7 +30,6 @@ class ColaView:
         subtitle = ctk.CTkLabel(header_frame, text="Visualización de la cola de procesamiento de cheques (FIFO)", font=ctk.CTkFont(size=14), text_color="gray")
         subtitle.pack(anchor="w")
         
-        # Mostrar empleado seleccionado
         empleado = self.data_manager.obtener_empleado_seleccionado()
         if empleado:
             info = ctk.CTkLabel(
@@ -47,7 +46,6 @@ class ColaView:
         
         ctk.CTkLabel(left_panel, text="Agregar a la Cola", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=20)
         
-        # Selector de empleado
         ctk.CTkLabel(left_panel, text="Seleccionar Empleado:", font=ctk.CTkFont(size=12, weight="bold")).pack(pady=(10, 5), padx=20, anchor="w")
         
         empleados = self.data_manager.obtener_empleados()
@@ -56,7 +54,6 @@ class ColaView:
             empleado_menu = ctk.CTkOptionMenu(left_panel, values=opciones_empleados)
             empleado_menu.pack(pady=(0, 10), padx=20, fill="x")
             
-            # Pre-seleccionar si hay un empleado seleccionado
             empleado_actual = self.data_manager.obtener_empleado_seleccionado()
             if empleado_actual:
                 texto_actual = f"{empleado_actual.get('nombre', '')} {empleado_actual.get('apellido', '')} - {empleado_actual.get('id', '')}"
@@ -74,7 +71,6 @@ class ColaView:
         tipo_menu = ctk.CTkOptionMenu(left_panel, values=["Salario Base", "Horas Extra", "Bonificación"])
         tipo_menu.pack(pady=(0, 10), padx=20, fill="x")
         
-        # Vista previa de la cola
         ctk.CTkLabel(left_panel, text="Cola Actual:", font=ctk.CTkFont(size=12, weight="bold")).pack(pady=(20, 5), padx=20, anchor="w")
         self.queue_display = ctk.CTkScrollableFrame(left_panel, fg_color="#2b2b2b", height=200)
         self.queue_display.pack(fill="both", expand=True, padx=20, pady=10)
@@ -90,8 +86,7 @@ class ColaView:
             
             if seleccion and monto and "No hay empleados" not in seleccion:
                 try:
-                    float(monto)  # Validar que sea número
-                    # Extraer ID del empleado
+                    float(monto)
                     id_emp = seleccion.split(" - ")[-1]
                     nombre_emp = seleccion.split(" - ")[0]
                     
@@ -103,6 +98,9 @@ class ColaView:
                     }
                     self.cola_cheques.append(cheque_info)
                     self.update_queue_display()
+                    
+                    self.main_window.guardar_estado_completo()
+                    
                     monto_entry.delete(0, 'end')
                     messagebox.showinfo("Éxito", f"Cheque agregado a la cola para {nombre_emp}")
                 except ValueError:
@@ -114,6 +112,9 @@ class ColaView:
             if self.cola_cheques:
                 procesado = self.cola_cheques.pop(0)
                 self.update_queue_display()
+                
+                self.main_window.guardar_estado_completo()
+                
                 messagebox.showinfo("Procesado", f"Cheque procesado (DEQUEUE):\n{procesado['nombre']}\nMonto: ${procesado['monto']}")
             else:
                 messagebox.showinfo("Cola Vacía", "No hay elementos en la cola")
@@ -121,6 +122,9 @@ class ColaView:
         def clear_queue():
             self.cola_cheques.clear()
             self.update_queue_display()
+            
+            self.main_window.guardar_estado_completo()
+            
             messagebox.showinfo("Cola Limpiada", "Todos los elementos fueron removidos")
         
         ctk.CTkButton(left_panel, text="➕ ENQUEUE (Agregar)", command=enqueue, fg_color="#2fa572", hover_color="#25824f").pack(pady=5, padx=20, fill="x")
@@ -150,14 +154,13 @@ class ColaView:
         self.update_display()
     
     def update_queue_display(self):
-        """Actualiza la vista previa pequeña de la cola"""
         for widget in self.queue_display.winfo_children():
             widget.destroy()
         
         if not self.cola_cheques:
             ctk.CTkLabel(self.queue_display, text="Cola vacía", text_color="gray", font=ctk.CTkFont(size=11)).pack(pady=10)
         else:
-            for idx, item in enumerate(self.cola_cheques[:5]):  # Mostrar solo los primeros 5
+            for idx, item in enumerate(self.cola_cheques[:5]):
                 texto = f"{idx+1}. {item['nombre']} - ${item['monto']}"
                 color = "#2fa572" if idx == 0 else "gray"
                 ctk.CTkLabel(self.queue_display, text=texto, text_color=color, font=ctk.CTkFont(size=10)).pack(anchor="w", padx=5, pady=2)
@@ -168,7 +171,6 @@ class ColaView:
         self.update_display()
     
     def update_display(self):
-        """Actualiza la visualización principal de la cola"""
         for widget in self.display_frame.winfo_children():
             widget.destroy()
         
@@ -179,7 +181,6 @@ class ColaView:
                 item_frame = ctk.CTkFrame(self.display_frame, fg_color="#1a1a1a", border_width=2, border_color="#2fa572" if idx == 0 else "#3b3b3b")
                 item_frame.pack(fill="x", pady=8, padx=5)
                 
-                # Header del cheque
                 position_text = "⏩ SIGUIENTE EN PROCESAR" if idx == 0 else f"Posición #{idx + 1} en cola"
                 position_color = "#2fa572" if idx == 0 else "gray"
                 
@@ -188,6 +189,5 @@ class ColaView:
                 
                 ctk.CTkLabel(header_frame, text=position_text, text_color=position_color, font=ctk.CTkFont(size=11, weight="bold")).pack(side="left")
                 
-                # Información del cheque
                 info_text = f"👤 {item['nombre']}\n💰 Monto: ${item['monto']}\n📋 Tipo: {item['tipo']}\n🆔 ID: {item['id']}"
                 ctk.CTkLabel(item_frame, text=info_text, text_color="lightgray", justify="left", font=ctk.CTkFont(size=11)).pack(anchor="w", padx=15, pady=(5, 15))

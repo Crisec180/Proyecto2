@@ -2,12 +2,12 @@ import customtkinter as ctk
 from tkinter import messagebox
 
 class ListaView:
-    """Vista para la gestión de Lista de Cheques"""
     
-    def __init__(self, parent, lista_impresion, data_manager):
+    def __init__(self, parent, lista_impresion, data_manager, main_window):
         self.parent = parent
         self.lista_impresion = lista_impresion
         self.data_manager = data_manager
+        self.main_window = main_window
     
     def render(self):
         self.create_header()
@@ -30,7 +30,6 @@ class ListaView:
         subtitle = ctk.CTkLabel(header_frame, text="Gestión de lista de cheques listos para impresión", font=ctk.CTkFont(size=14), text_color="gray")
         subtitle.pack(anchor="w")
         
-        # Mostrar empleado seleccionado
         empleado = self.data_manager.obtener_empleado_seleccionado()
         if empleado:
             info = ctk.CTkLabel(
@@ -47,7 +46,6 @@ class ListaView:
         
         ctk.CTkLabel(left_panel, text="Agregar Cheque a Lista", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=20)
         
-        # Selector de empleado
         ctk.CTkLabel(left_panel, text="Seleccionar Empleado:", font=ctk.CTkFont(size=12, weight="bold")).pack(pady=(10, 5), padx=20, anchor="w")
         
         empleados = self.data_manager.obtener_empleados()
@@ -56,7 +54,6 @@ class ListaView:
             empleado_menu = ctk.CTkOptionMenu(left_panel, values=opciones_empleados)
             empleado_menu.pack(pady=(0, 10), padx=20, fill="x")
             
-            # Pre-seleccionar si hay un empleado seleccionado
             empleado_actual = self.data_manager.obtener_empleado_seleccionado()
             if empleado_actual:
                 texto_actual = f"{empleado_actual.get('nombre', '')} {empleado_actual.get('apellido', '')} - {empleado_actual.get('id', '')}"
@@ -90,15 +87,16 @@ class ListaView:
             
             if seleccion and monto and "No hay empleados" not in seleccion:
                 try:
-                    float(monto)  # Validar que sea número
-                    # Extraer datos del empleado
+                    float(monto)
                     id_emp = seleccion.split(" - ")[-1]
                     nombre_emp = seleccion.split(" - ")[0]
                     
-                    # Crear tupla con la información del cheque
                     cheque = (id_emp, nombre_emp, monto, concepto if concepto else "Pago de nómina", fecha if fecha else "Pendiente")
                     self.lista_impresion.append(cheque)
                     self.update_list_display()
+                    
+                    self.main_window.guardar_estado_completo()
+                    
                     monto_entry.delete(0, 'end')
                     concepto_entry.delete(0, 'end')
                     fecha_entry.delete(0, 'end')
@@ -125,6 +123,9 @@ class ListaView:
                 if respuesta:
                     self.lista_impresion.clear()
                     self.update_list_display()
+                    
+                    self.main_window.guardar_estado_completo()
+                    
                     messagebox.showinfo("Lista Limpiada", "Todos los cheques fueron removidos")
             else:
                 messagebox.showinfo("Lista Vacía", "La lista ya está vacía")
@@ -133,7 +134,6 @@ class ListaView:
         ctk.CTkButton(left_panel, text="🖨️ Imprimir Todos", command=print_all, fg_color="#3b8ed0", hover_color="#2d6fa3").pack(pady=5, padx=20, fill="x")
         ctk.CTkButton(left_panel, text="🗑️ Limpiar Lista", command=clear, fg_color="#6b7280", hover_color="#4b5563").pack(pady=5, padx=20, fill="x")
         
-        # Estadísticas
         stats_frame = ctk.CTkFrame(left_panel, fg_color="#2b2b2b")
         stats_frame.pack(fill="x", padx=20, pady=20)
         
@@ -163,7 +163,6 @@ class ListaView:
         self.update_list_display()
     
     def update_stats(self):
-        """Actualiza las estadísticas"""
         if self.lista_impresion:
             cantidad = len(self.lista_impresion)
             total = sum(float(cheque[2]) for cheque in self.lista_impresion)
@@ -174,7 +173,6 @@ class ListaView:
         self.stats_label.configure(text=texto)
     
     def update_list_display(self):
-        """Actualiza la visualización de la lista"""
         for widget in self.list_display.winfo_children():
             widget.destroy()
         
@@ -185,22 +183,21 @@ class ListaView:
                 cheque_frame = ctk.CTkFrame(self.list_display, fg_color="#1a1a1a", border_width=2, border_color="#2fa572")
                 cheque_frame.pack(fill="x", pady=10, padx=5)
                 
-                # Header del cheque
                 header_frame = ctk.CTkFrame(cheque_frame, fg_color="transparent")
                 header_frame.pack(fill="x", padx=15, pady=(15, 5))
                 
                 ctk.CTkLabel(header_frame, text=f"📄 Cheque #{idx}", font=ctk.CTkFont(size=13, weight="bold"), text_color="#2fa572").pack(side="left")
                 
-                # Información del cheque
                 info_text = f"👤 Empleado: {nombre}\n🆔 ID: {id_emp}\n💰 Monto: ${float(monto):,.2f}\n📝 Concepto: {concepto}\n📅 Fecha: {fecha}"
                 ctk.CTkLabel(cheque_frame, text=info_text, text_color="lightgray", justify="left", font=ctk.CTkFont(size=11)).pack(anchor="w", padx=15, pady=(5, 10))
                 
-                # Botón para eliminar individual
                 def eliminar_cheque(index=idx-1):
                     respuesta = messagebox.askyesno("Confirmar", f"¿Eliminar el cheque #{index+1}?")
                     if respuesta:
                         self.lista_impresion.pop(index)
                         self.update_list_display()
+                        
+                        self.main_window.guardar_estado_completo()
                 
                 ctk.CTkButton(
                     cheque_frame, 
