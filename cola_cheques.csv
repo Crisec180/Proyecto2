@@ -1,0 +1,2 @@
+empleado,empleado_dict,horas_extras,tipo_cheque,estado,resultado
+"Empleado[ID: EMP001, Nombre: Juan Pérez, Departamento: Ingeniería, Puesto: Desarrollador Senior, Salario Base: 0.0, Tipo de Contrato: Mensual]","{'id': 'EMP001', 'nombre': 'Juan', 'apellido': 'Pérez', 'departamento': 'Ingeniería', 'puesto': 'Desarrollador Senior', 'salario': '3500.00', 'tipo_pago': 'Quincenal', 'fecha_ingreso': '2020-01-15'}",12.0,Pago de salario,En espera,

@@ -113,78 +113,85 @@ class PilaView:
             if not empleados:
                 messagebox.showwarning("Advertencia", "No hay empleados cargados. Carga un archivo CSV primero.")
                 return
-            
+
             seleccion = empleado_menu.get()
-            
+
             if not seleccion or "No hay empleados" in seleccion:
                 messagebox.showwarning("Advertencia", "Selecciona un empleado válido")
                 return
-            
+
             id_emp = seleccion.split(" - ")[-1]
             emp_dict, error = self.data_manager.buscar_por_id(id_emp)
-            
+
             if error:
                 messagebox.showerror("Error", error)
                 return
-            
+
             empleado_obj = self.crear_objeto_empleado(emp_dict)
-            
+
             try:
                 if self.es_pila_horas:
                     horas_str = valor_entry.get()
                     tarifa_str = tarifa_entry.get()
-                    
+
                     if not horas_str or not tarifa_str:
                         messagebox.showwarning("Advertencia", "Completa todos los campos")
                         return
-                    
+
                     horas = float(horas_str)
                     tarifa = float(tarifa_str)
-                    
+
                     if horas < 0 or tarifa <= 0:
                         messagebox.showerror("Error", "Los valores deben ser positivos")
                         return
-                    
+
                     empleado_obj.tarifa_hora = tarifa
-                    
+
                     calculador = obtenerNetoXHoras()
                     resultado = calculador.calcular_y_guardar(empleado_obj, horas, tarifa)
-                    
+
+                    # ⭐ CORRECCIÓN: Agregar el resultado a la pila de la vista
+                    self.pila.append(resultado)
+
+                    # Actualizar diccionario
                     if empleado_obj.id not in self.main_window.diccionario_calculos:
                         self.main_window.diccionario_calculos[empleado_obj.id] = {}
-                    
+
                     self.main_window.diccionario_calculos[empleado_obj.id]['Bruto por Horas'] = resultado.get('bruto', 0)
                     self.main_window.diccionario_calculos[empleado_obj.id]['Deducciones Normales'] = resultado.get('deducciones normales', 0)
-                    
+
                     valor_entry.delete(0, 'end')
                     tarifa_entry.delete(0, 'end')
-                    
-                    mensaje_extra = f"Horas: {horas}\n Tarifa: ${tarifa:,.2f}"
-                    
+
+                    mensaje_extra = f"Horas: {horas}\nTarifa: ${tarifa:,.2f}"
+
                 else:
                     deduccion_extra = deduccion_menu.get()
                     tipo_deduccion = tipo_deduccion_menu.get()
-                    
+
                     empleado_obj.deduccion_extra = deduccion_extra
                     empleado_obj.tipo_deduccion = tipo_deduccion
-                    
+
                     calculador = calcularNetoXContrato()
                     resultado = calculador.calcular_y_guardar(empleado_obj, deduccion_extra, tipo_deduccion)
-                    
+
+                    self.pila.append(resultado)
+
+                    # Actualizar diccionario
                     if empleado_obj.id not in self.main_window.diccionario_calculos:
                         self.main_window.diccionario_calculos[empleado_obj.id] = {}
-                    
+
                     self.main_window.diccionario_calculos[empleado_obj.id]['Deducciones Normales'] = resultado.get('valor deducciones normales', 0)
                     self.main_window.diccionario_calculos[empleado_obj.id]['Otras Deducciones'] = resultado.get('deducciones extra', '')
-                    
+
                     mensaje_extra = f"Deducción: {deduccion_extra}\nTipo: {tipo_deduccion}"
-                
+
                 if not resultado.get('proceso', True):
                     messagebox.showerror("Error", resultado.get('detalle', 'Error desconocido'))
                     return
-                
+
                 self.update_stack_display()
-                
+
                 try:
                     GestionArchivos.guardar_todos_los_datos(
                         self.main_window.cola_cheques,
@@ -195,7 +202,7 @@ class PilaView:
                     )
                 except Exception as e:
                     print(f"Error al guardar datos: {e}")
-                
+
                 mensaje = f"PUSH - Elemento agregado al tope de la pila\n\n"
                 mensaje += f"{empleado_obj.nombre} {empleado_obj.apellido}\n"
                 mensaje += mensaje_extra + "\n"
@@ -207,9 +214,9 @@ class PilaView:
                 else:
                     mensaje += "  • Calcular Deducciones Normales\n"
                     mensaje += "  • Calcular Otras Deducciones"
-                
+
                 messagebox.showinfo("PUSH Exitoso", mensaje)
-                
+
             except ValueError as ve:
                 messagebox.showerror("Error", f"Valor inválido: {str(ve)}")
             except Exception as e:
@@ -219,20 +226,14 @@ class PilaView:
             if not self.pila:
                 messagebox.showinfo("Pila Vacía", "No hay elementos en la pila para procesar")
                 return
-            
+
             try:
-                if self.es_pila_horas:
-                    calculador = obtenerNetoXHoras()
-                    calculador.pila.items = self.pila  
-                    procesado = calculador.procesar()
-                else:
-                    calculador = calcularNetoXContrato()
-                    calculador.pila.items = self.pila
-                    procesado = calculador.procesar()
-                
+                # ⭐ CORRECCIÓN: Remover del final de la lista (LIFO)
+                procesado = self.pila.pop()  # Esto ya remueve el último elemento
+
                 if procesado:
                     self.update_stack_display()
-                    
+
                     try:
                         GestionArchivos.guardar_todos_los_datos(
                             self.main_window.cola_cheques,
@@ -243,17 +244,17 @@ class PilaView:
                         )
                     except Exception as e:
                         print(f"Error al guardar datos: {e}")
-                    
+
                     nombre = procesado.get('nombre', 'Desconocido')
                     neto = procesado.get('neto', 0)
-                    
+
                     messagebox.showinfo("POP Exitoso", 
                         f"POP - Elemento removido del tope\n\n"
                         f"{nombre}\n"
                         f"Neto: ${neto:,.2f}")
                 else:
                     messagebox.showinfo("Pila Vacía", "No hay elementos para procesar")
-                    
+
             except Exception as e:
                 messagebox.showerror("Error", f"Error al hacer POP: {str(e)}")
         
@@ -261,22 +262,23 @@ class PilaView:
             if not self.pila:
                 messagebox.showinfo("Pila Vacía", "No hay elementos en la pila")
                 return
-            
+
+            # ⭐ CORRECCIÓN: Obtener el último elemento sin removerlo
             ultimo = self.pila[-1]
             nombre = ultimo.get('nombre', 'Desconocido')
             neto = ultimo.get('neto', 0)
-            
+
             info = f"PEEK - Elemento en el tope:\n\n"
             info += f"{nombre}\n"
             info += f"Neto: ${neto:,.2f}\n\n"
-            
+
             if self.es_pila_horas:
                 info += f"Horas: {ultimo.get('horas trabajadas', 0)}\n"
                 info += f"Tarifa: ${ultimo.get('tarifa hora', 0):,.2f}"
             else:
                 info += f"Contrato: {ultimo.get('tipo contrato', 'N/A')}\n"
                 info += f"Salario Base: ${ultimo.get('salario bruto', 0):,.2f}"
-            
+
             messagebox.showinfo("PEEK", info)
         
         def clear_stack():

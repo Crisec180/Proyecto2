@@ -232,7 +232,7 @@ class DiccionarioView:
                         self.diccionario[key] = {}
                     
                     self.diccionario[key]['Otras Deducciones'] = resultado
-                    
+    
                     mensaje = f"Cálculo: Otras Deducciones\n\n"
                     mensaje += f"Bruto: ${bruto:,.2f}\n"
                     mensaje += f"Tipo: {tipo_deduccion}\n"
@@ -327,7 +327,7 @@ class DiccionarioView:
     def update_dict_display(self):
         for widget in self.dict_display.winfo_children():
             widget.destroy()
-        
+
         if not self.diccionario:
             ctk.CTkLabel(self.dict_display, text="Diccionario vacío\n\nRealiza cálculos para comenzar", 
                         text_color="gray", font=ctk.CTkFont(size=14)).pack(pady=40)
@@ -338,25 +338,26 @@ class DiccionarioView:
                     nombre_completo = f"{empleado.get('nombre', '')} {empleado.get('apellido', '')}"
                 else:
                     nombre_completo = "Empleado Desconocido"
-                
+
                 key_frame = ctk.CTkFrame(self.dict_display, fg_color="#1a1a1a", border_width=2, border_color="#dc2626")
                 key_frame.pack(fill="x", pady=10, padx=5)
-                
+
                 header_frame = ctk.CTkFrame(key_frame, fg_color="transparent")
                 header_frame.pack(fill="x", padx=10, pady=(10, 5))
-                
+
                 ctk.CTkLabel(header_frame, text=f"{key}", font=ctk.CTkFont(size=12, weight="bold"), 
                            text_color="#dc2626").pack(side="left")
                 ctk.CTkLabel(header_frame, text=f"{nombre_completo}", font=ctk.CTkFont(size=11), 
                            text_color="gray").pack(side="left", padx=10)
-                
+
                 for tipo_calculo, datos in values.items():
                     calc_frame = ctk.CTkFrame(key_frame, fg_color="#2b2b2b")
                     calc_frame.pack(fill="x", padx=15, pady=5)
-                    
+
                     ctk.CTkLabel(calc_frame, text=f"{tipo_calculo}", text_color="#dc2626", 
                                font=ctk.CTkFont(size=11, weight="bold")).pack(anchor="w", padx=10, pady=(5, 2))
-                    
+
+                    # ⭐ CORRECCIÓN: Manejar diferentes tipos de datos
                     if isinstance(datos, dict):
                         if tipo_calculo == "Bruto por Horas":
                             info = f"  Horas: {datos.get('Horas_trabajadas', 0)}\n"
@@ -374,12 +375,21 @@ class DiccionarioView:
                                 for nombre, valor in datos['Desglose'].items():
                                     info += f"  • {nombre}: ${valor:,.2f}\n"
                         else:
+                            # Para cualquier otro tipo de diccionario
                             info = f"  Valor: {datos}"
-                        
+
                         ctk.CTkLabel(calc_frame, text=info, text_color="lightgray", 
                                    justify="left", font=ctk.CTkFont(size=10)).pack(anchor="w", padx=20, pady=(2, 5))
                     else:
-                        ctk.CTkLabel(calc_frame, text=f"  ${float(datos):,.2f}", text_color="#2fa572", 
+                        # ⭐ CORRECCIÓN: Verificar si es número antes de convertir
+                        try:
+                            valor_numerico = float(datos)
+                            texto = f"  ${valor_numerico:,.2f}"
+                        except (ValueError, TypeError):
+                            # Si no es número, mostrarlo como texto
+                            texto = f"  {datos}"
+
+                        ctk.CTkLabel(calc_frame, text=texto, text_color="#2fa572", 
                                    font=ctk.CTkFont(size=11, weight="bold")).pack(side="right", padx=10, pady=5)
-                
+
                 ctk.CTkLabel(key_frame, text="").pack(pady=5)

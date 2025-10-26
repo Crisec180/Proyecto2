@@ -1,0 +1,2 @@
+empleado_id,tipo_calculo,valor
+EMP001,Bruto por Horas,"{'Tarifa_base': 5000.0, 'Tarifa_final': 6000.0, 'Horas_trabajadas': 12.0, 'Ajuste': 'Ajuste +20%', 'Bruto': 72000.0}"

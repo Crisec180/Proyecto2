@@ -1,0 +1,2 @@
+id,nombre,tipo contrato,salario bruto,porcentaje periodo,ajuste,valor deducciones normales,deducciones normales,otras deducciones,deducciones extra,neto,proceso,detalle
+EMP001,Juan Pérez,Mensual,0.0,0.0,0.0,0.0,"{'CCSS': 0.0, 'Banco': 0.0, 'Impuesto sobre la Renta': 0.0}",{'Seguro privado': 0.0},Seguro privado,0.0,True,Deducción 'Seguro privado' aplicada correctamente.

@@ -275,58 +275,107 @@ class ColaView:
     def update_queue_display(self):
         for widget in self.queue_display.winfo_children():
             widget.destroy()
-        
+    
         if not self.cola_cheques:
             ctk.CTkLabel(self.queue_display, text="Cola vacía", text_color="gray", 
-                        font=ctk.CTkFont(size=11)).pack(pady=10)
+                      font=ctk.CTkFont(size=11)).pack(pady=10)
         else:
             for idx, item in enumerate(self.cola_cheques[:5]):
                 emp = item['empleado']
-                texto = f"{idx+1}. {emp.nombre} {emp.apellido} - {item['horas_extras']}h - {item['tipo_cheque']}"
+            
+                if isinstance(emp, str):
+                    emp_dict, _ = self.data_manager.buscar_por_id(emp)
+                    if emp_dict:
+                        nombre = f"{emp_dict.get('nombre', '')} {emp_dict.get('apellido', '')}"
+                    else:
+                        nombre = emp
+                elif isinstance(emp, dict):
+                    nombre = f"{emp.get('nombre', '')} {emp.get('apellido', '')}"
+                else:
+                    nombre = f"{emp.nombre} {emp.apellido}"
+            
+                texto = f"{idx+1}. {nombre} - {item['horas_extras']}h - {item['tipo_cheque']}"
                 color = "#2fa572" if idx == 0 else "gray"
                 peso = "bold" if idx == 0 else "normal"
                 ctk.CTkLabel(self.queue_display, text=texto, text_color=color, 
-                           font=ctk.CTkFont(size=10, weight=peso)).pack(anchor="w", padx=5, pady=2)
-            
+                        font=ctk.CTkFont(size=10, weight=peso)).pack(anchor="w", padx=5, pady=2)
+        
             if len(self.cola_cheques) > 5:
                 ctk.CTkLabel(self.queue_display, text=f"... y {len(self.cola_cheques) - 5} más", 
-                           text_color="gray", font=ctk.CTkFont(size=9)).pack(anchor="w", padx=5, pady=2)
-        
+                        text_color="gray", font=ctk.CTkFont(size=9)).pack(anchor="w", padx=5, pady=2)
+    
         if hasattr(self, 'display_frame'):
             self.update_display()
     
     def update_display(self):
         for widget in self.display_frame.winfo_children():
             widget.destroy()
-        
+    
         if not self.cola_cheques:
             ctk.CTkLabel(self.display_frame, text="Cola vacía\n\nAgrega empleados para comenzar", 
                         text_color="gray", font=ctk.CTkFont(size=14)).pack(pady=40)
         else:
             for idx, item in enumerate(self.cola_cheques):
                 emp = item['empleado']
-                
+            
+            # CORRECCIÓN: Manejar diferentes tipos
+                if isinstance(emp, str):
+                    emp_dict, _ = self.data_manager.buscar_por_id(emp)
+                    if emp_dict:
+                        emp_nombre = emp_dict.get('nombre', 'N/A')
+                        emp_apellido = emp_dict.get('apellido', '')
+                        emp_id = emp_dict.get('id', emp)
+                        emp_puesto = emp_dict.get('puesto', 'N/A')
+                        emp_departamento = emp_dict.get('departamento', 'N/A')
+                        emp_salario = emp_dict.get('salario_base', 0)
+                        emp_contrato = emp_dict.get('tipo_contrato', 'N/A')
+                    else:
+                        emp_nombre = emp
+                        emp_apellido = ''
+                        emp_id = emp
+                        emp_puesto = 'N/A'
+                        emp_departamento = 'N/A'
+                        emp_salario = 0
+                        emp_contrato = 'N/A'
+                elif isinstance(emp, dict):
+                    emp_nombre = emp.get('nombre', 'N/A')
+                    emp_apellido = emp.get('apellido', '')
+                    emp_id = emp.get('id', 'N/A')
+                    emp_puesto = emp.get('puesto', 'N/A')
+                    emp_departamento = emp.get('departamento', 'N/A')
+                    emp_salario = emp.get('salario_base', 0)
+                    emp_contrato = emp.get('tipo_contrato', 'N/A')
+                else:
+                # Objeto Empleado
+                    emp_nombre = emp.nombre
+                    emp_apellido = emp.apellido
+                    emp_id = emp.id
+                    emp_puesto = emp.puesto
+                    emp_departamento = emp.departamento
+                    emp_salario = emp.salario_base
+                    emp_contrato = emp.tipo_contrato
+            
                 item_frame = ctk.CTkFrame(self.display_frame, fg_color="#1a1a1a", 
                                          border_width=2, border_color="#2fa572" if idx == 0 else "#3b3b3b")
                 item_frame.pack(fill="x", pady=8, padx=5)
-                
+            
                 position_text = "SIGUIENTE EN PROCESAR (DEQUEUE)" if idx == 0 else f"Posición #{idx + 1} en cola"
                 position_color = "#2fa572" if idx == 0 else "gray"
-                
+            
                 header_frame = ctk.CTkFrame(item_frame, fg_color="transparent")
                 header_frame.pack(fill="x", padx=10, pady=(10, 5))
-                
+            
                 ctk.CTkLabel(header_frame, text=position_text, text_color=position_color, 
-                           font=ctk.CTkFont(size=11, weight="bold")).pack(side="left")
-                
-                info_text = f"{emp.nombre} {emp.apellido}\n"
-                info_text += f"ID: {emp.id}\n"
-                info_text += f"Puesto: {emp.puesto}\n"
-                info_text += f"Departamento: {emp.departamento}\n"
-                info_text += f"Salario Base: ${emp.salario_base:,.2f}\n"
-                info_text += f"Contrato: {emp.tipo_contrato}\n"
+                        font=ctk.CTkFont(size=11, weight="bold")).pack(side="left")
+            
+                info_text = f"{emp_nombre} {emp_apellido}\n"
+                info_text += f"ID: {emp_id}\n"
+                info_text += f"Puesto: {emp_puesto}\n"
+                info_text += f"Departamento: {emp_departamento}\n"
+                info_text += f"Salario Base: ${emp_salario:,.2f}\n"
+                info_text += f"Contrato: {emp_contrato}\n"
                 info_text += f"Horas Extras: {item['horas_extras']}h\n"
                 info_text += f"Tipo Cheque: {item['tipo_cheque']}"
-                
+            
                 ctk.CTkLabel(item_frame, text=info_text, text_color="lightgray", 
-                           justify="left", font=ctk.CTkFont(size=10)).pack(anchor="w", padx=15, pady=(5, 15))
+                            justify="left", font=ctk.CTkFont(size=10)).pack(anchor="w", padx=15, pady=(5, 15))

@@ -1,6 +1,8 @@
 import csv
 import os
 from collections import deque
+from Empleado import Empleado
+import json
 
 class GestionArchivos:
     Empleados_csv = 'empleados.csv'
@@ -10,6 +12,52 @@ class GestionArchivos:
     Diccionario_csv = 'diccionario_calculos.csv'
     Lista_Impresion_csv = 'lista_impresion.csv'
     
+    @staticmethod
+    def guardar_cola_cheques(cola_cheques):
+        """Guarda la cola de cheques convirtiendo objetos Empleado a diccionarios"""
+        if isinstance(cola_cheques, deque):
+            lista = list(cola_cheques)
+        else:
+            lista = cola_cheques
+        
+        lista_serializable = []
+        for item in lista:
+            item_copia = item.copy()
+            if 'empleado' in item_copia and hasattr(item_copia['empleado'], '__dict__'):
+                # Convertir objeto Empleado a dict
+                emp = item_copia['empleado']
+                item_copia['empleado'] = {
+                    'id': emp.id,
+                    'nombre': emp.nombre,
+                    'apellido': emp.apellido,
+                    'departamento': emp.departamento,
+                    'puesto': emp.puesto,
+                    'salario_base': emp.salario_base,
+                    'tipo_contrato': emp.tipo_contrato
+                }
+            lista_serializable.append(item_copia)
+
+        GestionArchivos.guardar_lista(lista_serializable, GestionArchivos.Cola_Cheques_csv)
+
+    @staticmethod
+    def cargar_cola_cheques():
+        lista = GestionArchivos.cargar_lista(None, GestionArchivos.Cola_Cheques_csv)
+    
+        for item in lista:
+            if 'empleado' in item and isinstance(item['empleado'], dict):
+                emp_dict = item['empleado']
+                item['empleado'] = Empleado(
+                    id=emp_dict.get('id', ''),
+                    nombre=emp_dict.get('nombre', ''),
+                    apellido=emp_dict.get('apellido', ''),
+                    departamento=emp_dict.get('departamento', 'General'),
+                    puesto=emp_dict.get('puesto', 'Empleado'),
+                    salario_base=float(emp_dict.get('salario_base', 0)),
+                    tipo_contrato=emp_dict.get('tipo_contrato', 'Mensual')
+            )
+    
+        return deque(lista)
+
     @staticmethod
     def guardar_lista(objetos, path: str):
         if not objetos:

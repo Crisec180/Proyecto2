@@ -1,0 +1,2 @@
+id,nombre,departamento,horas trabajadas,tarifa hora,bono departamento,bruto,bruto con bono,deducciones normales,neto,proceso,detalle
+EMP001,Juan Pérez,Ingeniería,32.0,2000.0,0.5,96000.0,144000.0,16560.0,127440.0,True,
