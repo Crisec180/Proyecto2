@@ -1,28 +1,45 @@
-from typing import Any, Dict 
 
 class CalculoDeSalarioBruto:
-    def __init__(self, empleado, horas_trabajadas, valor_hora):
+    def __init__(self, empleado, horas_trabajadas):
         self.empleado = empleado
         self.horas_trabajadas = horas_trabajadas
-        self.valor_hora = valor_hora
     
 
     def diccPrecioHora(self):
-          {
-              "precio1": 5.50,
-              "precio2": 7.00,
-              "precio3": 8.50
+          return {
+              "Jornada de 8": 1.0,
+              "horas_extras": 6.30,
+              "horas_nocturnas": 7.50
           }
-    def calcular_bruto_x_hora(self):
-         tarifa = self.diccPrecioHora()
-         if self.horas_trabajadas <= 40:
-             valor_hora = tarifa["precio1"]
-         elif 40 < self.horas_trabajadas <= 80:
-             valor_hora = tarifa["precio2"]
-         elif self.horas_trabajadas > 80:
-             valor_hora = tarifa["precio3"]
-         else:
-             raise ValueError("Opción no válida para el valor por hora.")
+    def obtener_precio_por_hora_del_empleado(self):
+        try:
+            tarifa_hora = float(getattr(self.empleado, "tarifa_hora", 0))
+        except (ValueError, TypeError):
+            tarifa_hora = 0.0
+        return tarifa_hora
 
-         salario_bruto = self.horas_trabajadas * valor_hora
-         return salario_bruto
+    def calcular_bruto_x_hora(self):
+        tarifa_base = self.obtener_tarifa_base()
+        #JORNADA DE 8 HORAS SALARIO NORMAL
+        if self.horas_trabajadas <= 8:
+            tarifa_final = tarifa_base
+            ajuste = "Sin ajuste"
+        #HORAS EXTRAS PERO NO MUCHAS
+        elif self.horas_trabajadas <= 16:
+            tarifa_final = tarifa_base * 1.20  # +20%
+            ajuste = "Ajuste +20%"
+        #HORAS EXTRAS MUY EXCESIVAS
+        else:
+            tarifa_final = tarifa_base * 1.50  # +50%
+            ajuste = "Ajuste +50%"
+
+        bruto = round(self.horas_trabajadas * tarifa_final, 2)
+
+        return {
+            "Tarifa_base": round(tarifa_base, 2),
+            "Tarifa_final": round(tarifa_final, 2),
+            "Horas_trabajadas": self.horas_trabajadas,
+            "Ajuste": ajuste,
+            "Bruto": bruto
+        }
+

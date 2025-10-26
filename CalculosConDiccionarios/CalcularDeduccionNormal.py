@@ -23,8 +23,6 @@ class CalculoDeDeducciones:
                     (4745000 - 2373000) * 0.20 +
                     (self.bruto - 4745000) * 0.25)
 
-
-
     def calcular_deducciones(self):
         return self.bruto * 0.10
     

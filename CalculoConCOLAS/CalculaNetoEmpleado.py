@@ -32,7 +32,7 @@ class CalculaNetoEmpleado:
 
 #-----------------------------------------------------------------------------------------
     #def calcula_neto(self, empleado: Empleado)
-    def obtener_neto_por_horas(self, empleado):
+    def obtener_neto_por_horas_extras(self, empleado):
        porHoras = ObtenerNetoXHoras(self.horas_extras)
        #OJO AQUI TIENE QUE HACER EL METODO DE ESA CLASE para que aqui nadas lo llame
        resultado_horas = porHoras.calcular_netoXHoras(empleado)
@@ -40,7 +40,7 @@ class CalculaNetoEmpleado:
        return resultado_horas
 
     def obtener_neto_por_contrato(self, empleado):
-        #Aqui aqui igual
+        #Aqui igual
         calculador = CalcularNetoXContrato(empleado)
         resultado_contrato = calculador.calcular_neto()
         return resultado_contrato

@@ -1,14 +1,14 @@
-from CalculosConDiccionarios import CalculaBrutoXHora
-from CalculosConDiccionarios import CalcularDeduccionNormal
+from CalculosConDICCIONARIOS import CalculaBrutoXHora
+from CalculosConDICCIONARIOS import CalcularDeduccionNormal
 import PilasParaCalculos as Pila
 
 # Diccionario de bonos por departamento
+#esto se le suma al bruto por horas
 BONO_DEPARTAMENTO = {
     "Ingeniería": 0.5,
     "Administración": 0.3,
     "Ventas": 0.4
 }
-
 class ObtenerNetoXHoras:
    def __init__(self):
         self.pila = Pila.Pila()
