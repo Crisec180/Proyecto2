@@ -1,4 +1,3 @@
-
 class calculoDeSalarioBruto:
     def __init__(self, empleado, horas_trabajadas):
         self.empleado = empleado
@@ -11,19 +10,23 @@ class calculoDeSalarioBruto:
             tarifa_hora = 0.0
         return tarifa_hora
 
+    def obtener_tarifa_base(self):
+        try:
+            tarifa_hora = float(getattr(self.empleado, "tarifa_hora", 0))
+        except (ValueError, TypeError):
+            tarifa_hora = 0.0
+        return tarifa_hora
+
     def calcular_bruto_x_hora(self):
         tarifa_base = self.obtener_tarifa_base()
-        #JORNADA DE 8 HORAS SALARIO NORMAL
         if self.horas_trabajadas <= 8:
             tarifa_final = tarifa_base
             ajuste = "Sin ajuste"
-        #HORAS EXTRAS PERO NO MUCHAS
         elif self.horas_trabajadas <= 16:
-            tarifa_final = tarifa_base * 1.20  # +20%
+            tarifa_final = tarifa_base * 1.20
             ajuste = "Ajuste +20%"
-        #HORAS EXTRAS MUY EXCESIVAS
         else:
-            tarifa_final = tarifa_base * 1.50  # +50%
+            tarifa_final = tarifa_base * 1.50
             ajuste = "Ajuste +50%"
 
         bruto = round(self.horas_trabajadas * tarifa_final, 2)
@@ -35,4 +38,3 @@ class calculoDeSalarioBruto:
             "Ajuste": ajuste,
             "Bruto": bruto
         }
-
