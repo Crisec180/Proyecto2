@@ -1,5 +1,5 @@
 #La clase que recibe todo los datos de chequeo y empleados
-from CalculoConCOLAS import CalculaNetoEmpleado
+from CalculoConCOLAS.CalculaNetoEmpleado import CalculaNetoEmpleado
 from ListaEmpleados import ListaEmpleados
 
 TIPO_CHEQUE = {

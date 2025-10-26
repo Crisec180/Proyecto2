@@ -1,4 +1,4 @@
-class CalculoDeDeducciones:
+class calculoDeDeducciones:
     def __init__(self, bruto):
         if bruto < 0:
             raise ValueError("El bruto no puede ser negativo.")

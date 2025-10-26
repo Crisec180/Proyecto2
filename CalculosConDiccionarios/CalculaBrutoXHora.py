@@ -1,5 +1,5 @@
 
-class CalculoDeSalarioBruto:
+class calculoDeSalarioBruto:
     def __init__(self, empleado, horas_trabajadas):
         self.empleado = empleado
         self.horas_trabajadas = horas_trabajadas

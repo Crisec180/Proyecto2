@@ -1,7 +1,7 @@
 from collections import deque
-from CalculosPILAS import CalcularNetoXContrato
-from CalculosPILAS import ObtenerNetoXHoras
-class CalculaNetoEmpleado:
+from CalculosPILAS.CalcularNetoXContrato import calcularNetoXContrato
+from CalculosPILAS.ObtenerNetoXHoras import obtenerNetoXHoras
+class calculaNetoEmpleado:
     def __init__(self, empleados, horas_extras, tipo_cheque):
         self.empleados = empleados
         if horas_extras < 0:
@@ -35,7 +35,7 @@ class CalculaNetoEmpleado:
     def obtener_neto_por_horas_extras(self, empleado):
         tarifa_hora = getattr(empleado, "salario_base", 0.0)
         #Esta manda a la otra clase hacer el calculo
-        calculador = ObtenerNetoXHoras()
+        calculador = obtenerNetoXHoras()
         resultado = calculador.calcular_y_guardar(empleado, self.horas_extras, tarifa_hora)
         return resultado
 
@@ -43,7 +43,7 @@ class CalculaNetoEmpleado:
         #Aqui igual
         deduccion_extra = getattr(empleado, "deduccion_extra", "")
         tipo_deduccion = getattr(empleado, "tipo_deduccion", "")
-        calculador = CalcularNetoXContrato(empleado)
+        calculador = calcularNetoXContrato()
         resultado_contrato = calculador.calcular_y_guardar(empleado, deduccion_extra, tipo_deduccion)
         return resultado_contrato
     

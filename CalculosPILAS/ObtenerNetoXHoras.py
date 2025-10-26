@@ -1,53 +1,58 @@
-from CalculosConDICCIONARIOS import CalculaBrutoXHora
-from CalculosConDICCIONARIOS import CalcularDeduccionNormal
+from CalculosConDICCIONARIOS.CalculaBrutoXHora import calculaBrutoXHora
+from CalculosConDICCIONARIOS.CalcularDeduccionNormal import calcularDeduccionNormal
+import PilasParaCalculos as Pila
 
-# Diccionario de bonos por departamento
-#esto se le suma al bruto por horas
 BONO_DEPARTAMENTO = {
     "Ingeniería": 0.5,
     "Administración": 0.3,
     "Ventas": 0.4
 }
-class ObtenerNetoXHoras:
+
+class obtenerNetoXHoras:
     def __init__(self):
         self.pila = Pila.Pila()
 
     def calcular_y_guardar(self, empleado, horas_trabajadas, tarifa_hora):
-        #Validaciones
+        # Validaciones
         if not isinstance(horas_trabajadas, (int, float)) or horas_trabajadas < 0:
-                return {"Proceso": False, "detalle": "Horas trabajadas inválidas."}
+            return {"success": False, "detalle": "Horas trabajadas inválidas."}
         if not isinstance(tarifa_hora, (int, float)) or tarifa_hora <= 0:
-                return {"Proceso": False, "detalle": "Tarifa por hora inválida."}
+            return {"success": False, "detalle": "Tarifa por hora inválida."}
+
         try:
-            # Obtener el bono según el departamento
-            bono = BONO_DEPARTAMENTO.get(empleado.departamento, 0.0)
+            bono = BONO_DEPARTAMENTO.get(getattr(empleado, "departamento", ""), 0.0)
 
-            bruto = CalculaBrutoXHora(empleado, horas_trabajadas, tarifa_hora)
+            bruto = float(calculaBrutoXHora(empleado, horas_trabajadas, tarifa_hora))
+            bruto = round(bruto, 2)
 
-            bruto_bono = round(bruto_bono * (1 + bono), 2)
-            deducciones_normales = CalcularDeduccionNormal(bruto_bono)
-            neto = round(bruto_bono - deducciones_normales, 2)
+            bruto_bono = round(bruto * (1 + bono), 2)
+
+            deducciones_obj = calcularDeduccionNormal(bruto_bono)
+            monto_deducciones = round(float(deducciones_obj.calcular_deducciones()), 2)
+
+            neto = round(bruto_bono - monto_deducciones, 2)
 
             resultado = {
-                    "Id": getattr(empleado, "id", None),
-                    "Nombre": f"{getattr(empleado, 'nombre', '')} {getattr(empleado, 'apellido', '')}".strip(),
-                    "Departamento": getattr(empleado, "departamento", ""),
-                    "Horas_trabajadas": horas_trabajadas,
-                    "Tarifa_hora": tarifa_hora,
-                    "Bono_departamento": bono,
-                    "Bruto": round(bruto, 2),
-                    "Bruto_con_bono": bruto_bono,
-                    "Deducciones_normales": deducciones_normales,
-                    "Neto": neto,
-                    "Proceso": True,
-                    "Detalle": ""
-                }
-            #APILA LOS RESULTADOS
+                "id": getattr(empleado, "id", None),
+                "nombre": f"{getattr(empleado, 'nombre', '')} {getattr(empleado, 'apellido', '')}".strip(),
+                "departamento": getattr(empleado, "departamento", ""),
+                "horas trabajadas": horas_trabajadas,
+                "tarifa hora": tarifa_hora,
+                "bono departamento": bono,
+                "bruto": bruto,
+                "bruto con bono": bruto_bono,
+                "deducciones normales": monto_deducciones,
+                "neto": neto,
+                "proceso": True,
+                "detalle": ""
+            }
+
             self.pila.push(resultado)
             return resultado
+
         except Exception as e:
-            return print(f"Error al calcular... {e}")
-    
+            return {"success": False, "Detalle": f"Error al calcular... {e}"}
+
     def procesar(self):
         return self.pila.pop()
 
