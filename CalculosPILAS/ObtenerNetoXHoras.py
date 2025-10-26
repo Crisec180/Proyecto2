@@ -1,6 +1,5 @@
 from CalculosConDICCIONARIOS import CalculaBrutoXHora
 from CalculosConDICCIONARIOS import CalcularDeduccionNormal
-import PilasParaCalculos as Pila
 
 # Diccionario de bonos por departamento
 #esto se le suma al bruto por horas

@@ -1,6 +1,5 @@
 from CalculosConDICCIONARIOS import CalcularDeduccionNormal
 from CalculosConDICCIONARIOS import CalculaOtrasDeducciones
-import PilasParaCalculos as Pila
 
 PORCENTAJE_PAGO = {
     "Semanal": 0.08,
