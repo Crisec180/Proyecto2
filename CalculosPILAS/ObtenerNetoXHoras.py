@@ -1,6 +1,7 @@
 from CalculosConDiccionarios.CalculaBrutoXHora import calculoDeSalarioBruto
 from CalculosConDiccionarios.CalcularDeduccionNormal import calculoDeDeducciones
 from CalculosPILAS.PilasParaCalculos import pila
+#LLama los metodos de pila
 
 BONO_DEPARTAMENTO = {
     "Ingeniería": 0.5,
@@ -48,15 +49,17 @@ class obtenerNetoXHoras:
                 "proceso": True,
                 "detalle": ""
             }
-
+            #APILA EL RESULTADO------------------------------------------------------
             self.pila.push(resultado)
             return resultado
 
         except Exception as e:
             return {"success": False, "Detalle": f"Error al calcular... {e}"}
 
+    #Procesa el ultimo en entrar------------------------------------------------
     def procesar(self):
         return self.pila.pop()
 
+    #MUESTRA LA PILA COMPLETA-----------------------------------------------
     def mostrar_pila(self):
         self.pila.mostrar()

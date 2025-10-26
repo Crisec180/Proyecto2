@@ -9,6 +9,7 @@ PORCENTAJE_PAGO = {
 
 class calcularNetoXContrato:
     def __init__(self):
+        #PILAS-----------------------------------------------------------------
         self.pila = pila()
 
     def calcular_y_guardar(self, empleado, deduccion_extra=None, tipo_deduccion=None):
@@ -52,7 +53,7 @@ class calcularNetoXContrato:
                 "proceso": bool(resultado_extras.get("Proceso", True)) if isinstance(resultado_extras, dict) else True,
                 "detalle": resultado_extras.get("Detalle", "") if isinstance(resultado_extras, dict) else ""
             }
-
+            #APILA EL RESULTADO------------------------------------------------------
             self.pila.push(resultado)
             return resultado
 
@@ -63,6 +64,7 @@ class calcularNetoXContrato:
                 "detalle": f"Error al calcular... {e}"
             }
 
+    #MAS PILA-------------------------------------------------------------
     def procesar(self):
         return self.pila.pop()
 
