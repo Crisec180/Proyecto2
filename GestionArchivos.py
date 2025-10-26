@@ -109,7 +109,10 @@ class GestionArchivos:
             key = item.get('empleado_id')
             tipo = item.get('tipo_calculo')
             valor = item.get('valor')
-            
+            try:
+                valor = float(valor)
+            except (ValueError, TypeError):
+                pass 
             if key not in diccionario:
                 diccionario[key] = {}
             diccionario[key][tipo] = valor

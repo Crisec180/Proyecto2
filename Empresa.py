@@ -1,5 +1,5 @@
 #La clase que recibe todo los datos de chequeo y empleados
-from CalculoConCOLAS.CalculaNetoEmpleado import CalculaNetoEmpleado
+from CalculoConCOLAS.CalculaNetoEmpleado import calculaNetoEmpleado
 from ListaEmpleados import ListaEmpleados
 
 TIPO_CHEQUE = {
@@ -42,7 +42,7 @@ class Empresa:
 
         tipo = self.normalizar_tipo_cheque(tipo_cheque)
         ajuste = TIPO_CHEQUE.get(tipo, 0.0)
-        calculador = CalculaNetoEmpleado(list(self.empleados), horas_extras, tipo)
+        calculador = calculaNetoEmpleado(list(self.empleados), horas_extras, tipo)
 
         resultados = []
         for empleado in list(self.empleados):
@@ -88,7 +88,7 @@ class Empresa:
         tipo = self.normalizar_tipo_cheque(tipo_cheque)
         ajuste = TIPO_CHEQUE.get(tipo, 0.0)
 
-        calculador = CalculaNetoEmpleado([empleado], horas_extras, tipo)
+        calculador = calculaNetoEmpleado([empleado], horas_extras, tipo)
         res = calculador.calcula_neto_para_empleado(empleado)
 
         if ajuste:
