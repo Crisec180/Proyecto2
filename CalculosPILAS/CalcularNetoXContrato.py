@@ -1,6 +1,6 @@
-from CalculosConDICCIONARIOS.CalcularDeduccionNormal import calcularDeduccionNormal
-from CalculosConDICCIONARIOS.CalculaOtrasDeducciones import calculaOtrasDeducciones
-import PilasParaCalculos as Pila
+from CalculosConDiccionarios.CalcularDeduccionNormal import calculoDeDeducciones
+from CalculosConDiccionarios.CalculaOtrasDeducciones import calculoDeDeduccionesExtras
+from CalculosPILAS.PilasParaCalculos import pila
 
 PORCENTAJE_PAGO = {
     "Semanal": 0.08,
@@ -9,7 +9,7 @@ PORCENTAJE_PAGO = {
 
 class calcularNetoXContrato:
     def __init__(self):
-        self.pila = Pila.Pila()
+        self.pila = pila()
 
     def calcular_y_guardar(self, empleado, deduccion_extra=None, tipo_deduccion=None):
         try:
@@ -22,17 +22,18 @@ class calcularNetoXContrato:
             ajuste = round(salario_bruto * porcentaje, 2)
 
             # Deducciones normales
-            deducciones_normales_obj = calcularDeduccionNormal(salario_bruto)
-            monto_deducciones_normales = round(float(deducciones_normales_obj.calcular_deducciones()), 2)
-            desglose_normales = deducciones_normales_obj.mostrar_deducciones()
-
+            deducciones_normales_obj = calculoDeDeducciones(salario_bruto)
+            resultado_deducciones = deducciones_normales_obj.calcular_deducciones()
+            monto_deducciones_normales = round(float(resultado_deducciones.get("Total", 0.0)), 2)
+            desglose_normales = resultado_deducciones.get("Desglose", {})
+            
             # Deducciones extras
             base_para_extras = round(salario_bruto - ajuste - monto_deducciones_normales, 2)
-            deducciones_extras_obj = calculaOtrasDeducciones(base_para_extras, deduccion_extra, tipo_deduccion)
+            deducciones_extras_obj = calculoDeDeduccionesExtras(base_para_extras, deduccion_extra, tipo_deduccion)
             resultado_extras = deducciones_extras_obj.calcular_deduccion_extra()
 
-            monto_extra = round(float(resultado_extras.get("total", 0.0)), 2) if isinstance(resultado_extras, dict) else round(float(resultado_extras or 0.0), 2)
-            desglose_extras = resultado_extras.get("desglose", {}) if isinstance(resultado_extras, dict) else {}
+            monto_extra = round(float(resultado_extras.get("Total", 0.0)), 2) if isinstance(resultado_extras, dict) else round(float(resultado_extras or 0.0), 2)
+            desglose_extras = resultado_extras.get("Desglose", {}) if isinstance(resultado_extras, dict) else {}
 
             neto = round(salario_bruto - ajuste - monto_deducciones_normales - monto_extra, 2)
 
@@ -48,8 +49,8 @@ class calcularNetoXContrato:
                 "otras deducciones": desglose_extras,
                 "deducciones extra": deduccion_extra,
                 "neto": neto,
-                "proceso": bool(resultado_extras.get("success", True)) if isinstance(resultado_extras, dict) else True,
-                "detalle": resultado_extras.get("detalle", "") if isinstance(resultado_extras, dict) else ""
+                "proceso": bool(resultado_extras.get("Proceso", True)) if isinstance(resultado_extras, dict) else True,
+                "detalle": resultado_extras.get("Detalle", "") if isinstance(resultado_extras, dict) else ""
             }
 
             self.pila.push(resultado)
