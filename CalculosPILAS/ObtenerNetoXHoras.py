@@ -10,33 +10,47 @@ BONO_DEPARTAMENTO = {
     "Ventas": 0.4
 }
 class ObtenerNetoXHoras:
-   def __init__(self):
+    def __init__(self):
         self.pila = Pila.Pila()
 
-def calcular_y_guardar(self, empleado, horas_trabajadas, tarifa_hora):
-    bono = BONO_DEPARTAMENTO.get(empleado.departamento, 0)
-    bruto = CalculaBrutoXHora(empleado, horas_trabajadas, tarifa_hora)
-    bruto_bono = bruto * (1 + bono)
-    deducciones_normales = CalcularDeduccionNormal(bruto_bono)
-    neto = bruto_bono - deducciones_normales.calcular_deducciones()
+    def calcular_y_guardar(self, empleado, horas_trabajadas, tarifa_hora):
+        #Validaciones
+        if not isinstance(horas_trabajadas, (int, float)) or horas_trabajadas < 0:
+                return {"Proceso": False, "detalle": "Horas trabajadas inválidas."}
+        if not isinstance(tarifa_hora, (int, float)) or tarifa_hora <= 0:
+                return {"Proceso": False, "detalle": "Tarifa por hora inválida."}
+        try:
+            # Obtener el bono según el departamento
+            bono = BONO_DEPARTAMENTO.get(empleado.departamento, 0.0)
 
-    resultado = {
-        "id": empleado.id,
-        "nombre": empleado.nombre,
-        "departamento": empleado.departamento,
-        "horas_trabajadas": horas_trabajadas,
-        "tarifa_hora": tarifa_hora,
-        "bono_departamento": bono,
-        "bruto": bruto,
-        "bruto_con_bono": bruto_bono,
-        "deducciones_normales": deducciones_normales.calcular_deducciones(),
-        "neto": neto
-    }
-    self.pila.push(resultado)
-    return resultado
+            bruto = CalculaBrutoXHora(empleado, horas_trabajadas, tarifa_hora)
 
-def procesar(self):
-    return self.pila.pop()
+            bruto_bono = round(bruto_bono * (1 + bono), 2)
+            deducciones_normales = CalcularDeduccionNormal(bruto_bono)
+            neto = round(bruto_bono - deducciones_normales, 2)
 
-def mostrar_pila(self):
-    self.pila.mostrar()
+            resultado = {
+                    "Id": getattr(empleado, "id", None),
+                    "Nombre": f"{getattr(empleado, 'nombre', '')} {getattr(empleado, 'apellido', '')}".strip(),
+                    "Departamento": getattr(empleado, "departamento", ""),
+                    "Horas_trabajadas": horas_trabajadas,
+                    "Tarifa_hora": tarifa_hora,
+                    "Bono_departamento": bono,
+                    "Bruto": round(bruto, 2),
+                    "Bruto_con_bono": bruto_bono,
+                    "Deducciones_normales": deducciones_normales,
+                    "Neto": neto,
+                    "Proceso": True,
+                    "Detalle": ""
+                }
+            #APILA LOS RESULTADOS
+            self.pila.push(resultado)
+            return resultado
+        except Exception as e:
+            return print(f"Error al calcular... {e}")
+    
+    def procesar(self):
+        return self.pila.pop()
+
+    def mostrar_pila(self):
+        self.pila.mostrar()

@@ -4,13 +4,6 @@ class CalculoDeSalarioBruto:
         self.empleado = empleado
         self.horas_trabajadas = horas_trabajadas
     
-
-    def diccPrecioHora(self):
-          return {
-              "Jornada de 8": 1.0,
-              "horas_extras": 6.30,
-              "horas_nocturnas": 7.50
-          }
     def obtener_precio_por_hora_del_empleado(self):
         try:
             tarifa_hora = float(getattr(self.empleado, "tarifa_hora", 0))
