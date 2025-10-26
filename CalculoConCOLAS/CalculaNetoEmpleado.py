@@ -33,16 +33,18 @@ class CalculaNetoEmpleado:
 #-----------------------------------------------------------------------------------------
     #def calcula_neto(self, empleado: Empleado)
     def obtener_neto_por_horas_extras(self, empleado):
-       porHoras = ObtenerNetoXHoras(self.horas_extras)
-       #OJO AQUI TIENE QUE HACER EL METODO DE ESA CLASE para que aqui nadas lo llame
-       resultado_horas = porHoras.calcular_netoXHoras(empleado)
-
-       return resultado_horas
+        tarifa_hora = getattr(empleado, "salario_base", 0.0)
+        #Esta manda a la otra clase hacer el calculo
+        calculador = ObtenerNetoXHoras()
+        resultado = calculador.calcular_y_guardar(empleado, self.horas_extras, tarifa_hora)
+        return resultado
 
     def obtener_neto_por_contrato(self, empleado):
         #Aqui igual
+        deduccion_extra = getattr(empleado, "deduccion_extra", "")
+        tipo_deduccion = getattr(empleado, "tipo_deduccion", "")
         calculador = CalcularNetoXContrato(empleado)
-        resultado_contrato = calculador.calcular_neto()
+        resultado_contrato = calculador.calcular_y_guardar(empleado, deduccion_extra, tipo_deduccion)
         return resultado_contrato
     
     def calcula_neto_para_empleado(self, empleado):
@@ -58,7 +60,7 @@ class CalculaNetoEmpleado:
         #esto seria para la salida
         try:
             if "horas" in tipo or "semanal" in tipo:
-                resultado = self.obtener_neto_por_horas(empleado)
+                resultado = self.obtener_neto_por_horas_extras(empleado)
             elif "quincenal" in tipo or "contrato" in tipo or "mensual" in tipo:
                 resultado = self.obtener_neto_por_contrato(empleado)
             else:
@@ -69,7 +71,7 @@ class CalculaNetoEmpleado:
                     "Deducciones": {"total": 0.0},
                     "Otras Deducciones": {"total": 0.0},
                     "Neto": 0.0,
-                    "Success": False,
+                    "Proceso": False,
                     "Detalle": f"Tipo de contrato no reconocido: '{tipo_contrato_raw}'"
                 }
         except Exception as e:
@@ -80,7 +82,7 @@ class CalculaNetoEmpleado:
                 "Deducciones": {"total": 0.0},
                 "Otras Deducciones": {"total": 0.0},
                 "Neto": 0.0,
-                "Success": False,
+                "Proceso": False,
                 "Detalle": f"Error al calcular neto: {e}"
             }
     
@@ -90,7 +92,7 @@ class CalculaNetoEmpleado:
         resultado.setdefault("Deducciones", resultado.get("Deducciones", {"total": 0.0}))
         resultado.setdefault("Otras Deducciones", resultado.get("Otras Deducciones", {"total": 0.0}))
         resultado.setdefault("Neto", float(resultado.get("Neto", 0.0)))
-        resultado.setdefault("Success", bool(resultado.get("Success", True)))
+        resultado.setdefault("Proceso", bool(resultado.get("Proceso", True)))
         resultado.setdefault("Detalle", resultado.get("Detalle", ""))
 
         return resultado
