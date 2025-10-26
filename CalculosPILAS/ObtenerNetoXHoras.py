@@ -1,5 +1,5 @@
-from CalculosConDICCIONARIOS import CalculaBrutoXHora
-from CalculosConDICCIONARIOS import CalcularDeduccionNormal
+from CalculosConDiccionarios import CalculaBrutoXHora
+from CalculosConDiccionarios import CalcularDeduccionNormal
 import PilasParaCalculos as Pila
 
 # Diccionario de bonos por departamento
@@ -13,12 +13,12 @@ class ObtenerNetoXHoras:
    def __init__(self):
         self.pila = Pila.Pila()
 
-def calcular_y_guardar(self, empleado, horas_trabajadas, tarifa_hora, deducciones_extra=0):
+def calcular_y_guardar(self, empleado, horas_trabajadas, tarifa_hora):
     bono = BONO_DEPARTAMENTO.get(empleado.departamento, 0)
     bruto = CalculaBrutoXHora(empleado, horas_trabajadas, tarifa_hora)
     bruto_bono = bruto * (1 + bono)
-    deducciones_normales = CalcularDeduccionNormal(empleado, bruto_bono)
-    neto = bruto_bono - deducciones_normales - deducciones_extra
+    deducciones_normales = CalcularDeduccionNormal(bruto_bono)
+    neto = bruto_bono - deducciones_normales.calcular_deducciones()
 
     resultado = {
         "id": empleado.id,
@@ -29,8 +29,7 @@ def calcular_y_guardar(self, empleado, horas_trabajadas, tarifa_hora, deduccione
         "bono_departamento": bono,
         "bruto": bruto,
         "bruto_con_bono": bruto_bono,
-        "deducciones_normales": deducciones_normales,
-        "deducciones_extra": deducciones_extra,
+        "deducciones_normales": deducciones_normales.calcular_deducciones(),
         "neto": neto
     }
     self.pila.push(resultado)
