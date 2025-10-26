@@ -1,5 +1,8 @@
 import customtkinter as ctk
 from tkinter import messagebox
+from CalculoConCOLAS.CalculaNetoEmpleado import calculaNetoEmpleado
+from Empleado import Empleado
+from GestionArchivos import GestionArchivos
 
 class ColaView:
     
@@ -8,6 +11,7 @@ class ColaView:
         self.cola_cheques = cola_cheques
         self.data_manager = data_manager
         self.main_window = main_window
+        self.calculador_cola = None
     
     def render(self):
         self.create_header()
@@ -27,24 +31,36 @@ class ColaView:
         title = ctk.CTkLabel(header_frame, text="Cola: Calcular Neto Empleado", font=ctk.CTkFont(size=28, weight="bold"))
         title.pack(anchor="w")
         
-        subtitle = ctk.CTkLabel(header_frame, text="Visualización de la cola de procesamiento de cheques (FIFO)", font=ctk.CTkFont(size=14), text_color="gray")
+        subtitle = ctk.CTkLabel(header_frame, text="Visualización de la cola de procesamiento (FIFO) - Usa CalculaNetoEmpleado", font=ctk.CTkFont(size=14), text_color="gray")
         subtitle.pack(anchor="w")
         
         empleado = self.data_manager.obtener_empleado_seleccionado()
         if empleado:
             info = ctk.CTkLabel(
                 header_frame,
-                text=f"✓ Trabajando con: {empleado.get('nombre', '')} {empleado.get('apellido', '')} (ID: {empleado.get('id', '')})",
+                text=f"Trabajando con: {empleado.get('nombre', '')} {empleado.get('apellido', '')} (ID: {empleado.get('id', '')})",
                 font=ctk.CTkFont(size=12, weight="bold"),
                 text_color="#2fa572"
             )
             info.pack(anchor="w", pady=(5, 0))
     
+    def crear_objeto_empleado(self, emp_dict):
+        """Convierte diccionario de empleado a objeto Empleado"""
+        return Empleado(
+            id=emp_dict.get('id', ''),
+            nombre=emp_dict.get('nombre', ''),
+            apellido=emp_dict.get('apellido', ''),
+            departamento=emp_dict.get('departamento', 'General'),
+            puesto=emp_dict.get('puesto', 'Empleado'),
+            salario_base=float(emp_dict.get('salario_base', 0)),
+            tipo_contrato=emp_dict.get('tipo_contrato', 'Mensual')
+        )
+    
     def create_left_panel(self, parent):
         left_panel = ctk.CTkFrame(parent, fg_color="#1a1a1a")
         left_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
         
-        ctk.CTkLabel(left_panel, text="Agregar a la Cola", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=20)
+        ctk.CTkLabel(left_panel, text="ENQUEUE - Agregar a la Cola", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=20)
         
         ctk.CTkLabel(left_panel, text="Seleccionar Empleado:", font=ctk.CTkFont(size=12, weight="bold")).pack(pady=(10, 5), padx=20, anchor="w")
         
@@ -63,16 +79,16 @@ class ColaView:
             empleado_menu = ctk.CTkOptionMenu(left_panel, values=["No hay empleados"])
             empleado_menu.pack(pady=(0, 10), padx=20, fill="x")
         
-        ctk.CTkLabel(left_panel, text="Monto Neto a Calcular:").pack(pady=(10, 5), padx=20, anchor="w")
-        monto_entry = ctk.CTkEntry(left_panel, placeholder_text="Ej: 1500.00")
-        monto_entry.pack(pady=(0, 10), padx=20, fill="x")
+        ctk.CTkLabel(left_panel, text="Horas Extras:", font=ctk.CTkFont(size=12)).pack(pady=(10, 5), padx=20, anchor="w")
+        horas_entry = ctk.CTkEntry(left_panel, placeholder_text="Ej: 10 (horas)")
+        horas_entry.pack(pady=(0, 10), padx=20, fill="x")
         
-        ctk.CTkLabel(left_panel, text="Tipo de Cálculo:").pack(pady=(10, 5), padx=20, anchor="w")
-        tipo_menu = ctk.CTkOptionMenu(left_panel, values=["Salario Base", "Horas Extra", "Bonificación"])
+        ctk.CTkLabel(left_panel, text="Tipo de Cheque:", font=ctk.CTkFont(size=12)).pack(pady=(10, 5), padx=20, anchor="w")
+        tipo_menu = ctk.CTkOptionMenu(left_panel, values=["Pago de salario", "Caja chica", "Otros Gastos"])
         tipo_menu.pack(pady=(0, 10), padx=20, fill="x")
         
-        ctk.CTkLabel(left_panel, text="Cola Actual:", font=ctk.CTkFont(size=12, weight="bold")).pack(pady=(20, 5), padx=20, anchor="w")
-        self.queue_display = ctk.CTkScrollableFrame(left_panel, fg_color="#2b2b2b", height=200)
+        ctk.CTkLabel(left_panel, text="Cola Actual (FIFO):", font=ctk.CTkFont(size=12, weight="bold")).pack(pady=(20, 5), padx=20, anchor="w")
+        self.queue_display = ctk.CTkScrollableFrame(left_panel, fg_color="#2b2b2b", height=150)
         self.queue_display.pack(fill="both", expand=True, padx=20, pady=10)
         
         def enqueue():
@@ -81,55 +97,158 @@ class ColaView:
                 return
             
             seleccion = empleado_menu.get()
-            monto = monto_entry.get()
-            tipo = tipo_menu.get()
+            horas_extras_str = horas_entry.get()
+            tipo_cheque = tipo_menu.get()
             
-            if seleccion and monto and "No hay empleados" not in seleccion:
-                try:
-                    float(monto)
-                    id_emp = seleccion.split(" - ")[-1]
-                    nombre_emp = seleccion.split(" - ")[0]
-                    
-                    cheque_info = {
-                        'id': id_emp,
-                        'nombre': nombre_emp,
-                        'monto': monto,
-                        'tipo': tipo
-                    }
-                    self.cola_cheques.append(cheque_info)
-                    self.update_queue_display()
-                    
-                    self.main_window.guardar_estado_completo()
-                    
-                    monto_entry.delete(0, 'end')
-                    messagebox.showinfo("Éxito", f"Cheque agregado a la cola para {nombre_emp}")
-                except ValueError:
-                    messagebox.showerror("Error", "El monto debe ser un número válido")
-            else:
-                messagebox.showwarning("Advertencia", "Completa todos los campos")
-        
-        def dequeue():
-            if self.cola_cheques:
-                procesado = self.cola_cheques.pop(0)
-                self.update_queue_display()
-                
-                self.main_window.guardar_estado_completo()
-                
-                messagebox.showinfo("Procesado", f"Cheque procesado (DEQUEUE):\n{procesado['nombre']}\nMonto: ${procesado['monto']}")
-            else:
-                messagebox.showinfo("Cola Vacía", "No hay elementos en la cola")
-        
-        def clear_queue():
-            self.cola_cheques.clear()
+            if not seleccion or "No hay empleados" in seleccion:
+                messagebox.showwarning("Advertencia", "Selecciona un empleado válido")
+                return
+            
+            try:
+                horas_extras = float(horas_extras_str) if horas_extras_str else 0
+                if horas_extras < 0:
+                    messagebox.showerror("Error", "Las horas extras no pueden ser negativas")
+                    return
+            except ValueError:
+                messagebox.showerror("Error", "Ingresa un número válido de horas")
+                return
+            
+            id_emp = seleccion.split(" - ")[-1]
+            emp_dict, error = self.data_manager.buscar_por_id(id_emp)
+            
+            if error:
+                messagebox.showerror("Error", error)
+                return
+            
+            empleado_obj = self.crear_objeto_empleado(emp_dict)
+            
+            item_cola = {
+                'empleado': empleado_obj,
+                'empleado_dict': emp_dict,
+                'horas_extras': horas_extras,
+                'tipo_cheque': tipo_cheque,
+                'estado': 'En espera',
+                'resultado': None
+            }
+            
+            self.cola_cheques.append(item_cola)
             self.update_queue_display()
             
-            self.main_window.guardar_estado_completo()
+            try:
+                GestionArchivos.guardar_todos_los_datos(
+                    self.cola_cheques,
+                    self.main_window.pila_horas,
+                    self.main_window.pila_contratos,
+                    self.main_window.diccionario_calculos,
+                    self.main_window.lista_impresion
+                )
+            except Exception as e:
+                print(f"Error al guardar datos: {e}")
             
-            messagebox.showinfo("Cola Limpiada", "Todos los elementos fueron removidos")
+            horas_entry.delete(0, 'end')
+            messagebox.showinfo("Éxito ENQUEUE", 
+                f"Empleado agregado a la cola (ENQUEUE)\n\n"
+                f"{empleado_obj.nombre} {empleado_obj.apellido}\n"
+                f"Horas extras: {horas_extras}\n"
+                f"Tipo: {tipo_cheque}\n"
+                f"Posición en cola: #{len(self.cola_cheques)}")
         
-        ctk.CTkButton(left_panel, text="➕ ENQUEUE (Agregar)", command=enqueue, fg_color="#2fa572", hover_color="#25824f").pack(pady=5, padx=20, fill="x")
-        ctk.CTkButton(left_panel, text="✅ DEQUEUE (Procesar Primero)", command=dequeue, fg_color="#3b8ed0", hover_color="#2d6fa3").pack(pady=5, padx=20, fill="x")
-        ctk.CTkButton(left_panel, text="🗑️ Limpiar Cola", command=clear_queue, fg_color="#6b7280", hover_color="#4b5563").pack(pady=5, padx=20, fill="x")
+        def dequeue():
+            if not self.cola_cheques:
+                messagebox.showinfo("Cola Vacía", "No hay elementos en la cola para procesar")
+                return
+            
+            item = self.cola_cheques.pop(0)
+            empleado_obj = item['empleado']
+            horas_extras = item['horas_extras']
+            tipo_cheque = item['tipo_cheque']
+            
+            try:
+                calculador = calculaNetoEmpleado([empleado_obj], horas_extras, tipo_cheque)
+                
+                resultado = calculador.calcula_neto_para_empleado(empleado_obj)
+                
+                if "horas" in empleado_obj.tipo_contrato.lower():
+                    self.main_window.pila_horas.append(resultado)
+                else:
+                    self.main_window.pila_contratos.append(resultado)
+                
+                emp_id = empleado_obj.id
+                if emp_id not in self.main_window.diccionario_calculos:
+                    self.main_window.diccionario_calculos[emp_id] = {}
+                
+                self.main_window.diccionario_calculos[emp_id]['ultimo_calculo'] = resultado.get('Neto', 0)
+                self.main_window.diccionario_calculos[emp_id]['fecha_proceso'] = 'Hoy'
+                
+                self.update_queue_display()
+                
+                try:
+                    GestionArchivos.guardar_todos_los_datos(
+                        self.cola_cheques,
+                        self.main_window.pila_horas,
+                        self.main_window.pila_contratos,
+                        self.main_window.diccionario_calculos,
+                        self.main_window.lista_impresion
+                    )
+                except Exception as e:
+                    print(f"Error al guardar datos: {e}")
+                
+                mensaje = f"DEQUEUE - Empleado procesado exitosamente\n\n"
+                mensaje += f"{empleado_obj.nombre} {empleado_obj.apellido}\n"
+                mensaje += f"Neto calculado: ${resultado.get('Neto', 0):,.2f}\n"
+                mensaje += f"Bruto: ${resultado.get('Bruto', 0):,.2f}\n"
+                mensaje += f"Deducciones: ${resultado.get('Deducciones', {}).get('total', 0):,.2f}\n\n"
+                mensaje += f"Resultado guardado en {'Pila Horas' if 'horas' in empleado_obj.tipo_contrato.lower() else 'Pila Contratos'}\n"
+                mensaje += f"Resultado guardado en Diccionario"
+                
+                messagebox.showinfo("DEQUEUE Exitoso", mensaje)
+                
+            except Exception as e:
+                messagebox.showerror("Error al Procesar", f"Error durante DEQUEUE:\n{str(e)}")
+                self.cola_cheques.insert(0, item)
+                self.update_queue_display()
+        
+        def clear_queue():
+            if not self.cola_cheques:
+                messagebox.showinfo("Cola Vacía", "La cola ya está vacía")
+                return
+            
+            cantidad = len(self.cola_cheques)
+            respuesta = messagebox.askyesno("Confirmar", f"¿Limpiar {cantidad} elementos de la cola?")
+            
+            if respuesta:
+                self.cola_cheques.clear()
+                self.update_queue_display()
+                
+                try:
+                    GestionArchivos.guardar_todos_los_datos(
+                        self.cola_cheques,
+                        self.main_window.pila_horas,
+                        self.main_window.pila_contratos,
+                        self.main_window.diccionario_calculos,
+                        self.main_window.lista_impresion
+                    )
+                except Exception as e:
+                    print(f"Error al guardar datos: {e}")
+                
+                messagebox.showinfo("Cola Limpiada", f"Se removieron {cantidad} elementos")
+        
+        btn_frame = ctk.CTkFrame(left_panel, fg_color="transparent")
+        btn_frame.pack(pady=10, padx=20, fill="x")
+        
+        ctk.CTkButton(btn_frame, text="ENQUEUE (Agregar)", command=enqueue, 
+                     fg_color="#2fa572", hover_color="#25824f", height=40).pack(fill="x", pady=5)
+        ctk.CTkButton(btn_frame, text="DEQUEUE (Procesar Primero)", command=dequeue, 
+                     fg_color="#3b8ed0", hover_color="#2d6fa3", height=40).pack(fill="x", pady=5)
+        ctk.CTkButton(btn_frame, text="Limpiar Cola", command=clear_queue, 
+                     fg_color="#6b7280", hover_color="#4b5563", height=35).pack(fill="x", pady=5)
+        
+        info_frame = ctk.CTkFrame(left_panel, fg_color="#2b2b2b", border_width=2, border_color="#2fa572")
+        info_frame.pack(pady=10, padx=20, fill="x")
+        
+        info_text = "ℹEstructura: Cola (deque)\nProcesa: Calcular Neto Empleado\nFlujo: FIFO (First In, First Out)"
+        ctk.CTkLabel(info_frame, text=info_text, font=ctk.CTkFont(size=10), 
+                    text_color="gray", justify="left").pack(padx=10, pady=10)
         
         self.update_queue_display()
     
@@ -141,10 +260,10 @@ class ColaView:
         
         info_label = ctk.CTkLabel(
             right_panel, 
-            text="FIFO: First In, First Out\nEl primer elemento agregado será el primero en procesarse",
+            text="FIFO: First In, First Out\nEl primer elemento agregado será el primero en procesarse\n✓ Usa: CalculaNetoEmpleado (con deque)",
             font=ctk.CTkFont(size=11),
             text_color="gray",
-            justify="left"
+            justify="center"
         )
         info_label.pack(pady=(0, 10), padx=20)
         
@@ -158,36 +277,56 @@ class ColaView:
             widget.destroy()
         
         if not self.cola_cheques:
-            ctk.CTkLabel(self.queue_display, text="Cola vacía", text_color="gray", font=ctk.CTkFont(size=11)).pack(pady=10)
+            ctk.CTkLabel(self.queue_display, text="Cola vacía", text_color="gray", 
+                        font=ctk.CTkFont(size=11)).pack(pady=10)
         else:
             for idx, item in enumerate(self.cola_cheques[:5]):
-                texto = f"{idx+1}. {item['nombre']} - ${item['monto']}"
+                emp = item['empleado']
+                texto = f"{idx+1}. {emp.nombre} {emp.apellido} - {item['horas_extras']}h - {item['tipo_cheque']}"
                 color = "#2fa572" if idx == 0 else "gray"
-                ctk.CTkLabel(self.queue_display, text=texto, text_color=color, font=ctk.CTkFont(size=10)).pack(anchor="w", padx=5, pady=2)
+                peso = "bold" if idx == 0 else "normal"
+                ctk.CTkLabel(self.queue_display, text=texto, text_color=color, 
+                           font=ctk.CTkFont(size=10, weight=peso)).pack(anchor="w", padx=5, pady=2)
             
             if len(self.cola_cheques) > 5:
-                ctk.CTkLabel(self.queue_display, text=f"... y {len(self.cola_cheques) - 5} más", text_color="gray", font=ctk.CTkFont(size=9)).pack(anchor="w", padx=5, pady=2)
+                ctk.CTkLabel(self.queue_display, text=f"... y {len(self.cola_cheques) - 5} más", 
+                           text_color="gray", font=ctk.CTkFont(size=9)).pack(anchor="w", padx=5, pady=2)
         
-        self.update_display()
+        if hasattr(self, 'display_frame'):
+            self.update_display()
     
     def update_display(self):
         for widget in self.display_frame.winfo_children():
             widget.destroy()
         
         if not self.cola_cheques:
-            ctk.CTkLabel(self.display_frame, text="Cola vacía\n\nAgrega cheques para comenzar", text_color="gray", font=ctk.CTkFont(size=14)).pack(pady=40)
+            ctk.CTkLabel(self.display_frame, text="Cola vacía\n\nAgrega empleados para comenzar", 
+                        text_color="gray", font=ctk.CTkFont(size=14)).pack(pady=40)
         else:
             for idx, item in enumerate(self.cola_cheques):
-                item_frame = ctk.CTkFrame(self.display_frame, fg_color="#1a1a1a", border_width=2, border_color="#2fa572" if idx == 0 else "#3b3b3b")
+                emp = item['empleado']
+                
+                item_frame = ctk.CTkFrame(self.display_frame, fg_color="#1a1a1a", 
+                                         border_width=2, border_color="#2fa572" if idx == 0 else "#3b3b3b")
                 item_frame.pack(fill="x", pady=8, padx=5)
                 
-                position_text = "⏩ SIGUIENTE EN PROCESAR" if idx == 0 else f"Posición #{idx + 1} en cola"
+                position_text = "SIGUIENTE EN PROCESAR (DEQUEUE)" if idx == 0 else f"Posición #{idx + 1} en cola"
                 position_color = "#2fa572" if idx == 0 else "gray"
                 
                 header_frame = ctk.CTkFrame(item_frame, fg_color="transparent")
                 header_frame.pack(fill="x", padx=10, pady=(10, 5))
                 
-                ctk.CTkLabel(header_frame, text=position_text, text_color=position_color, font=ctk.CTkFont(size=11, weight="bold")).pack(side="left")
+                ctk.CTkLabel(header_frame, text=position_text, text_color=position_color, 
+                           font=ctk.CTkFont(size=11, weight="bold")).pack(side="left")
                 
-                info_text = f"👤 {item['nombre']}\n💰 Monto: ${item['monto']}\n📋 Tipo: {item['tipo']}\n🆔 ID: {item['id']}"
-                ctk.CTkLabel(item_frame, text=info_text, text_color="lightgray", justify="left", font=ctk.CTkFont(size=11)).pack(anchor="w", padx=15, pady=(5, 15))
+                info_text = f"{emp.nombre} {emp.apellido}\n"
+                info_text += f"ID: {emp.id}\n"
+                info_text += f"Puesto: {emp.puesto}\n"
+                info_text += f"Departamento: {emp.departamento}\n"
+                info_text += f"Salario Base: ${emp.salario_base:,.2f}\n"
+                info_text += f"Contrato: {emp.tipo_contrato}\n"
+                info_text += f"Horas Extras: {item['horas_extras']}h\n"
+                info_text += f"Tipo Cheque: {item['tipo_cheque']}"
+                
+                ctk.CTkLabel(item_frame, text=info_text, text_color="lightgray", 
+                           justify="left", font=ctk.CTkFont(size=10)).pack(anchor="w", padx=15, pady=(5, 15))
