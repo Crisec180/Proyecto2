@@ -23,7 +23,7 @@ class EmpleadosView:
         title_label = ctk.CTkLabel(
             header_frame,
             text="Gestión de Empleados",
-            font=ctk.CTkFont(size=28, weight="bold")
+            font=ctk.CTkFont(size=30, weight="bold")
         )
         title_label.pack(anchor="w")
         
@@ -39,7 +39,7 @@ class EmpleadosView:
         subtitle_label = ctk.CTkLabel(
             header_frame,
             text=texto_seleccion,
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(size=25, weight="bold"),
             text_color=color
         )
         subtitle_label.pack(anchor="w", pady=(5, 0))

@@ -27,7 +27,8 @@ class calculoDeDeducciones:
             renta = round(self.impuesto_sobre_la_renta(), 2)
 
             total = round(ccss + banco + renta, 2)
-
+            
+            #DICCIONARIO DE RESULTADOS-------------------------------------
             desglose = {
                 "CCSS": ccss,
                 "Banco": banco,

@@ -19,18 +19,22 @@ class calculoDeSalarioBruto:
 
     def calcular_bruto_x_hora(self):
         tarifa_base = self.obtener_tarifa_base()
+        #JORNADA NORMAL DE TRABAJO--------------------------------------
         if self.horas_trabajadas <= 8:
             tarifa_final = tarifa_base
             ajuste = "Sin ajuste"
+        #CON ALGUNAS HORAS EXTRAS--------------------------------------
         elif self.horas_trabajadas <= 16:
             tarifa_final = tarifa_base * 1.20
             ajuste = "Ajuste +20%"
         else:
+        #CON VARIAS HORAS EXTRAS--------------------------------------
             tarifa_final = tarifa_base * 1.50
             ajuste = "Ajuste +50%"
 
         bruto = round(self.horas_trabajadas * tarifa_final, 2)
 
+        #DICCIONARIO DE RESULTADOS-------------------------------------
         return {
             "Tarifa_base": round(tarifa_base, 2),
             "Tarifa_final": round(tarifa_final, 2),

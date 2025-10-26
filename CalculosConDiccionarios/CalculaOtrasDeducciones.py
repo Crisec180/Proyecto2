@@ -11,6 +11,7 @@ class calculoDeDeduccionesExtras:
     #El ROUND ES REDONDEAR A 2 DECIMALES
     def tipo_seleccionada(self):
         bruto = self.bruto
+        #DICCIONARIO DE TIPOS DE DEDUCCIONES------------------------------------------------
         return {
             "Voluntaria": {
                 "Seguro privado": round(bruto * 0.03, 2),

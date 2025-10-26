@@ -9,7 +9,7 @@ class calculaNetoEmpleado:
         else:
             self.horas_extras = float(horas_extras)
         self.tipo_cheque = tipo_cheque
-        #para cola
+        #COLA ----------------------------------------------------------------------------
         self.cola_empleados = deque(list(empleados))
         self.cola_resultado = deque()
 
@@ -83,7 +83,7 @@ class calculaNetoEmpleado:
                 "Otras Deducciones": {"total": 0.0},
                 "Neto": 0.0,
                 "Proceso": False,
-                "Detalle": f"Error al calcular neto: {e}"
+                "Detalle": f"Error al calcular.... {e}"
             }
     
         resultado.setdefault("Id", getattr(empleado, "id", None))
@@ -94,7 +94,6 @@ class calculaNetoEmpleado:
         resultado.setdefault("Neto", float(resultado.get("Neto", 0.0)))
         resultado.setdefault("Proceso", bool(resultado.get("Proceso", True)))
         resultado.setdefault("Detalle", resultado.get("Detalle", ""))
-
         return resultado
 
  
@@ -102,6 +101,7 @@ class calculaNetoEmpleado:
         resultados = []
         for empleado in self.empleados:
             res = self.calcula_neto_para_empleado(empleado)
+            #SE MANDA A LA COLA----------------------------------------------------------
             self.encolar(res)
             resultados.append(res)
         return resultados
