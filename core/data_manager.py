@@ -79,7 +79,7 @@ class DataManager:
         try:
             # Ordenar considerando mayúsculas/minúsculas
             self.empleados_ordenados = merge_sort(self.empleados, key=lambda emp: str(emp.get(campo, '')).lower())
-            return True, f"Empleados ordenados por {campo} usando Merge Sort O(n log n)"
+            return True, f"Empleados ordenados por {campo} usando Merge Sort"
         except Exception as e:
             return False, f"Error al ordenar: {str(e)}"
     
