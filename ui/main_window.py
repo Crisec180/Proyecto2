@@ -274,7 +274,7 @@ class PayrollSystem(ctk.CTk):
     def show_procesar_pagos(self):
         """Muestra la vista de Procesamiento de Pagos"""
         self.clear_main_frame()
-        view = PagosView(self.main_frame, self.data_manager)
+        view = PagosView(self.main_frame, self.data_manager, self)
         view.render()
 
 

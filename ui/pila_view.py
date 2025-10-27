@@ -58,8 +58,9 @@ class PilaView:
             apellido=emp_dict.get('apellido', ''),
             departamento=emp_dict.get('departamento', 'General'),
             puesto=emp_dict.get('puesto', 'Empleado'),
-            salario_base=float(emp_dict.get('salario_base', 0)),
-            tipo_contrato=emp_dict.get('tipo_contrato', 'Mensual')
+            # Algunos CSV usan 'salario' y 'tipo_pago' en lugar de 'salario_base' y 'tipo_contrato'
+            salario_base=float(emp_dict.get('salario_base', emp_dict.get('salario', 0))),
+            tipo_contrato=emp_dict.get('tipo_contrato', emp_dict.get('tipo_pago', 'Mensual'))
         )
     
     def create_left_panel(self, parent):
@@ -173,7 +174,21 @@ class PilaView:
                     empleado_obj.tipo_deduccion = tipo_deduccion
 
                     calculador = calcularNetoXContrato()
+                    # DEBUG: imprimir datos antes del cálculo
+                    try:
+                        print("DEBUG - emp_dict original:", emp_dict)
+                        print("DEBUG - empleado_obj:", vars(empleado_obj))
+                        print(f"DEBUG - deduccion_extra={deduccion_extra}, tipo_deduccion={tipo_deduccion}")
+                    except Exception as _:
+                        pass
+
                     resultado = calculador.calcular_y_guardar(empleado_obj, deduccion_extra, tipo_deduccion)
+
+                    # DEBUG: mostrar resultado
+                    try:
+                        print("DEBUG - resultado calcular_y_guardar:", resultado)
+                    except Exception:
+                        pass
 
                     self.pila.append(resultado)
 
@@ -181,8 +196,9 @@ class PilaView:
                     if empleado_obj.id not in self.main_window.diccionario_calculos:
                         self.main_window.diccionario_calculos[empleado_obj.id] = {}
 
-                    self.main_window.diccionario_calculos[empleado_obj.id]['Deducciones Normales'] = resultado.get('valor deducciones normales', 0)
-                    self.main_window.diccionario_calculos[empleado_obj.id]['Otras Deducciones'] = resultado.get('deducciones extra', '')
+                    deducciones = resultado.get('deducciones', {})
+                    self.main_window.diccionario_calculos[empleado_obj.id]['Deducciones Normales'] = deducciones.get('total_normales', 0)
+                    self.main_window.diccionario_calculos[empleado_obj.id]['Otras Deducciones'] = deducciones.get('total_extras', 0)
 
                     mensaje_extra = f"Deducción: {deduccion_extra}\nTipo: {tipo_deduccion}"
 
@@ -409,13 +425,22 @@ class PilaView:
                     info_text += f"Bruto: ${item.get('bruto', 0):,.2f}\n"
                     info_text += f"Bono: {item.get('bono departamento', 0)*100}%\n"
                     info_text += f"Bruto + Bono: ${item.get('bruto con bono', 0):,.2f}\n"
+                    info_text += f"Deducciones: ${item.get('deducciones normales', 0):,.2f}\n"
+                    info_text += f"Neto Final: ${item.get('neto', 0):,.2f}"
                 else:
-                    info_text += f"Contrato: {item.get('tipo contrato', 'N/A')}\n"
-                    info_text += f"Salario Base: ${item.get('salario bruto', 0):,.2f}\n"
-                    info_text += f"Ajuste: ${item.get('ajuste', 0):,.2f}\n"
-                
-                info_text += f"Deducciones: ${item.get('valor deducciones normales', item.get('deducciones normales', 0)):,.2f}\n"
-                info_text += f"Neto Final: ${item.get('neto', 0):,.2f}"
+                    try:
+                        info_text += f"Contrato: {item.get('tipo_contrato', 'N/A')}\n"
+                        calculo = item.get('calculo', {})
+                        deducciones = item.get('deducciones', {})
+                        info_text += f"Salario Base: ${calculo.get('salario_bruto', 0):,.2f}\n"
+                        info_text += f"Porcentaje Ajuste: {calculo.get('porcentaje_ajuste', 0)*100}%\n"
+                        info_text += f"Monto Ajuste: ${calculo.get('monto_ajuste', 0):,.2f}\n"
+                        info_text += f"Salario Ajustado: ${calculo.get('salario_ajustado', 0):,.2f}\n"
+                        info_text += f"Deducciones Normales: ${deducciones.get('total_normales', 0):,.2f}\n"
+                        info_text += f"Deducciones Extra: ${deducciones.get('total_extras', 0):,.2f}\n"
+                        info_text += f"Neto Final: ${item.get('neto', 0):,.2f}"
+                    except Exception as e:
+                        info_text += f"Error al mostrar detalles: {str(e)}"
                 
                 ctk.CTkLabel(item_frame, text=info_text, text_color="lightgray", 
                            justify="left", font=ctk.CTkFont(size=10)).pack(anchor="w", padx=15, pady=(5, 15))
